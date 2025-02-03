@@ -7,11 +7,11 @@ requires = ['setuptools>=61.2']
 
 [project]
 name = "dbdicom"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [ 
     "matplotlib",
     "nibabel",
-    "numpy<=1.26.4",
+    "numpy",
     "pandas",
     "pydicom", 
     "python-gdcm",
@@ -60,25 +60,25 @@ requires-python = ">=3.6"
 where = ["src"]
 
 [project.optional-dependencies]
-docs = [
-    "sphinx",
-    "pydata-sphinx-theme",
-    "myst-parser", 
-    "sphinx-copybutton",
-    "sphinx-design",
-    "sphinx-remove-toctrees",
-    "autodocsumm",
-    "docutils",
-    "sphinxcontrib-applehelp",
-    "sphinxcontrib-devhelp",
-    "sphinxcontrib-htmlhelp",
-    "sphinxcontrib-jsmath",
-    "sphinxcontrib-qthelp",
-    "sphinxcontrib-serializinghtml",
-    "sphinx-gallery",
-]
+# docs = [
+#     "sphinx",
+#     "pydata-sphinx-theme",
+#     "myst-parser", 
+#     "sphinx-copybutton",
+#     "sphinx-design",
+#     "sphinx-remove-toctrees",
+#     "autodocsumm",
+#     "docutils",
+#     "sphinxcontrib-applehelp",
+#     "sphinxcontrib-devhelp",
+#     "sphinxcontrib-htmlhelp",
+#     "sphinxcontrib-jsmath",
+#     "sphinxcontrib-qthelp",
+#     "sphinxcontrib-serializinghtml",
+#     "sphinx-gallery",
+# ]
 extensions = [
-    "scipy",
+    # "scipy",
     # restricting to the latest stable release for now due to a bug
     # introduced in 0.20.0 that causes executables to crash. The bug is known
     # and a fix will presumably be included in upcoming releases
@@ -88,9 +88,7 @@ extensions = [
     # Note on pyton 3.11 scikit image must be installed as
     # pip install --pre scikit-image<=0.19.0 
     # until a new version is released (0.21.0)
-    "scikit-image<=0.19.0", 
-    #"SimpleITK", "itk-elastix",
-    "SimpleITK-SimpleElastix",
+    "scikit-image", 
     "itk-elastix",
     "dipy",
     "scikit-learn",
