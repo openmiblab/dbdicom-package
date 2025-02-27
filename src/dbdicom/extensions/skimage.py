@@ -97,7 +97,7 @@ def _volume_features(arr, spacing=[1,1,1], affine=None, show_progress=print):
         slice_spacing = np.linalg.norm(affine[:3, 2])
         spacing = (column_spacing, row_spacing, slice_spacing) 
     voxel_volume = spacing[0]*spacing[1]*spacing[2]
-    nr_of_voxels = np.count_nonzero(array)
+    nr_of_voxels = np.count_nonzero(array > 0.5)
     volume = nr_of_voxels * voxel_volume
     # Surface properties - for now only extracting surface area
     # Note: this is smoothing the surface first - not tested in depth whether this is necessary or helpful.
