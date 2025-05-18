@@ -1,14 +1,13 @@
 # Importing annotations to handle or sign in import type hints
 from __future__ import annotations
 
-import vreg
-
+import os
 import numpy as np
 from dbdicom.manager import Manager
 from dbdicom.types.database import Database
 from dbdicom.types.patient import Patient
 from dbdicom.types.study import Study
-from dbdicom.types.series import Series, _coords_size, _grid_to_coords
+from dbdicom.types.series import Series, _grid_to_coords
 from dbdicom.types.instance import Instance
 
 
@@ -121,8 +120,13 @@ def database(path:str=None, **kwargs) -> Database:
                     Nr of instances: 176
         ----------------------------------
     """
+
     if path is None:
         mgr = Manager()
+    elif not os.path.exists(path):
+        raise NameError(
+            f"Database {path} does not exist. "
+        )
     else:
         mgr = Manager(path, **kwargs)
         mgr.open(path)
@@ -281,8 +285,6 @@ def series(dtype='mri', in_study:Study=None, in_database:Database=None, **kwargs
         if in_database is None:
             _database.save()
     return series
-
-
 
 
 def as_series(array:np.ndarray, coords:dict=None, gridcoords:dict=None, dtype='mri', in_study:Study=None, in_database:Database=None, **kwargs)->Series:
@@ -460,26 +462,7 @@ def ones(shape:tuple, coords:dict=None, gridcoords:dict=None, **kwargs) -> Serie
 
 
 
-def pixel_values(path, *args, **kwargs) -> np.ndarray:
-    dcm = database(path)
-    arr = dcm.pixel_values(*args, **kwargs)
-    dcm.close()
-    return arr
 
-def volume(path, *args, **kwargs) -> vreg.Volume3D:
-    dcm = database(path)
-    vol = dcm.volume(*args, **kwargs)
-    dcm.close()
-    return vol
 
-def write_volume(path, *args, **kwargs):
-    dcm = database(path)
-    dcm.write_volume(*args, **kwargs)
-    dcm.save().close()
-
-def merge_series(path, *args, **kwargs):
-    dcm = database(path)
-    dcm.merge_series(*args, **kwargs)
-    dcm.save().close()
 
 

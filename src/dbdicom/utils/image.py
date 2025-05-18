@@ -530,7 +530,7 @@ def dismantle_affine_matrix(affine):
     slice_cosine = affine[:3, 2] / slice_thickness
     return {
         'PixelSpacing': [row_spacing, column_spacing], 
-        'SpacingBetweenSlices': slice_thickness,  # Obsolete
+#        'SpacingBetweenSlices': slice_thickness,  # Obsolete
         'SliceThickness': slice_thickness, 
         'ImageOrientationPatient': row_cosine.tolist() + column_cosine.tolist(), 
         'ImagePositionPatient': affine[:3, 3].tolist(), # first slice for a volume

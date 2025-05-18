@@ -1,3 +1,5 @@
+from tqdm import tqdm
+
 import numpy as np
 import pandas as pd
 import scipy
@@ -186,100 +188,126 @@ def _map_slice_group_to_slice_group(source, affine_source, target, output_affine
     return mapped_series
 
 
-def mask_array(mask, on=None, dim='InstanceNumber', geom=False):
+def mask_array(mask, on=None):
 
-    if on is None:
-        # geom keyword not yet implemented
-        return dbdicom.array(mask, sortby=['SliceLocation', dim], mask=True, pixels_first=True, first_volume=True)
-
-    # Get transformation matrix
-    mask.message('Loading transformation matrices..')
-    affine_source = mask.affine_matrix()
-    affine_target = on.affine_matrix() 
-
-    if isinstance(affine_target, list):
-        mapped_arrays = []
-        mapped_headers = []
-        for affine_slice_group_target in affine_target:
-            mapped, headers = _map_mask_series_to_slice_group(
-                mask, 
-                affine_slice_group_target[1], 
-                affine_source, 
-                affine_slice_group_target[0],
-                dim=dim, geom=geom,
-            )
-            mapped_arrays.append(mapped)
-            mapped_headers.append(headers)
-    else:
-        mapped_arrays, mapped_headers = _map_mask_series_to_slice_group(
-            mask, on, affine_source, affine_target[0], dim=dim, geom=geom)
-    return mapped_arrays, mapped_headers
-
-
-def _map_mask_series_to_slice_group(source, target, affine_source, affine_target, **kwargs):
-
-    if isinstance(affine_source, list):
-        mapped_arrays = []
-        for affine_slice_group in affine_source:
-            mapped, headers = _map_mask_slice_group_to_slice_group(
-                affine_slice_group[1], 
-                target, 
-                affine_slice_group[0], 
-                affine_target,
-                **kwargs,
-            )
-            mapped_arrays.append(mapped)
-        array = np.logical_or(mapped_arrays[0], mapped_arrays[1])
-        for a in mapped_arrays[2:]:
-            array = np.logical_or(array, a)
-        return array, headers
-    else:
-        return _map_mask_slice_group_to_slice_group(source, target, affine_source[0], affine_target, **kwargs)
-
-
-def _map_mask_slice_group_to_slice_group(source, target, affine_source, affine_target, dim='InstanceNumber', geom=False):
-
-    if isinstance(source, list):
-        status = source[0].status
-    else:
-        status = source.status
-
-    # Get arrays
-    array_source, headers_source = dbdicom.array(source, sortby=['SliceLocation',dim], pixels_first=True, first_volume=True)
-    array_target, headers_target = dbdicom.array(target, sortby=['SliceLocation',dim], pixels_first=True, first_volume=True)
-
-    if geom:
-        # mask shows geometry of source
-        array_source = np.full(array_source.shape, 1)
-        
-    # For mapping mask onto series, the time dimensions must be the same.
-    # If they are not, the mask is extruded on to the series time dimensions.
-    nk = array_target.shape[3]
-    if array_source.shape[3] != nk:
-        status.message('Extruding ROI on time series..')
-        array_source = np.amax(array_source, axis=-1)
-        array_source = np.repeat(array_source[:,:,:,np.newaxis], nk, axis=3)
+    # Get all frames and return if empty
+    frames = on.instances()
+    if frames == []:
+        raise ValueError("Empty series")
     
-    # If the dimensions and affines are equal there is nothing to do
-    if np.array_equal(affine_source, affine_target):
-        if array_source.shape == array_target.shape:
-            # Make sure the result is a mask
-            array_source[array_source > 0.5] = 1
-            array_source[array_source <= 0.5] = 0
-            return array_source, headers_target
+    mask_vol = mask.volume()
 
-    slice_thickness = headers_source[0,0].SliceThickness
-    array_target = np.empty(array_target.shape[:3] + (array_source.shape[3],))
-    for t in range(array_source.shape[3]):
-        array_target[:,:,:,t], _ = vreg.affine_reslice_slice_by_slice(
-            array_source[:,:,:,t], 
-            affine_source, 
-            affine_target, 
-            output_shape = array_target.shape[:3],
-            slice_thickness = slice_thickness,
-            mask=True)
+    # Read frames
+    regions = []
+    regions_frames = []
+    for i, f in tqdm(enumerate(frames), total=len(frames), desc='Reading volumes..', disable=mask.in_gui()):
+        if mask.in_gui():
+            mask.progress(i+1, len(frames), 'Reading values..')
+        vol = f.get_dataset().get_values('volume')
+        mask_vol_i = mask_vol.slice_like(vol)
+        mask_vol_i = np.squeeze(mask_vol_i.values > 0.5)
+        if np.count_nonzero(mask_vol_i):
+            regions.append(mask_vol_i)
+            regions_frames.append(f)
+    mask.status.hide()
+    return regions, regions_frames
 
-    return array_target, headers_target
+
+
+# def _OLD_mask_array(mask, on=None, dim='InstanceNumber', geom=False):
+
+#     if on is None:
+#         # geom keyword not yet implemented
+#         return dbdicom.array(mask, sortby=['SliceLocation', dim], mask=True, pixels_first=True, first_volume=True)
+
+#     # Get transformation matrix
+#     mask.message('Loading transformation matrices..')
+#     affine_source = mask.affine_matrix()
+#     affine_target = on.affine_matrix() 
+
+#     if isinstance(affine_target, list):
+#         mapped_arrays = []
+#         mapped_headers = []
+#         for affine_slice_group_target in affine_target:
+#             mapped, headers = _map_mask_series_to_slice_group(
+#                 mask, 
+#                 affine_slice_group_target[1], 
+#                 affine_source, 
+#                 affine_slice_group_target[0],
+#                 dim=dim, geom=geom,
+#             )
+#             mapped_arrays.append(mapped)
+#             mapped_headers.append(headers)
+#     else:
+#         mapped_arrays, mapped_headers = _map_mask_series_to_slice_group(
+#             mask, on, affine_source, affine_target[0], dim=dim, geom=geom)
+#     return mapped_arrays, mapped_headers
+
+
+# def _map_mask_series_to_slice_group(source, target, affine_source, affine_target, **kwargs):
+
+#     if isinstance(affine_source, list):
+#         mapped_arrays = []
+#         for affine_slice_group in affine_source:
+#             mapped, headers = _map_mask_slice_group_to_slice_group(
+#                 affine_slice_group[1], 
+#                 target, 
+#                 affine_slice_group[0], 
+#                 affine_target,
+#                 **kwargs,
+#             )
+#             mapped_arrays.append(mapped)
+#         array = np.logical_or(mapped_arrays[0], mapped_arrays[1])
+#         for a in mapped_arrays[2:]:
+#             array = np.logical_or(array, a)
+#         return array, headers
+#     else:
+#         return _map_mask_slice_group_to_slice_group(source, target, affine_source[0], affine_target, **kwargs)
+
+
+# def _map_mask_slice_group_to_slice_group(source, target, affine_source, affine_target, dim='InstanceNumber', geom=False):
+
+#     if isinstance(source, list):
+#         status = source[0].status
+#     else:
+#         status = source.status
+
+#     # Get arrays
+#     array_source, headers_source = dbdicom.array(source, sortby=['SliceLocation',dim], pixels_first=True, first_volume=True)
+#     array_target, headers_target = dbdicom.array(target, sortby=['SliceLocation',dim], pixels_first=True, first_volume=True)
+
+#     if geom:
+#         # mask shows geometry of source
+#         array_source = np.full(array_source.shape, 1)
+        
+#     # For mapping mask onto series, the time dimensions must be the same.
+#     # If they are not, the mask is extruded on to the series time dimensions.
+#     nk = array_target.shape[3]
+#     if array_source.shape[3] != nk:
+#         status.message('Extruding ROI on time series..')
+#         array_source = np.amax(array_source, axis=-1)
+#         array_source = np.repeat(array_source[:,:,:,np.newaxis], nk, axis=3)
+    
+#     # If the dimensions and affines are equal there is nothing to do
+#     if np.array_equal(affine_source, affine_target):
+#         if array_source.shape == array_target.shape:
+#             # Make sure the result is a mask
+#             array_source[array_source > 0.5] = 1
+#             array_source[array_source <= 0.5] = 0
+#             return array_source, headers_target
+
+#     slice_thickness = headers_source[0,0].SliceThickness
+#     array_target = np.empty(array_target.shape[:3] + (array_source.shape[3],))
+#     for t in range(array_source.shape[3]):
+#         array_target[:,:,:,t], _ = vreg.affine_reslice_slice_by_slice(
+#             array_source[:,:,:,t], 
+#             affine_source, 
+#             affine_target, 
+#             output_shape = array_target.shape[:3],
+#             slice_thickness = slice_thickness,
+#             mask=True)
+
+#     return array_target, headers_target
 
 
 def mask_statistics(masks, images):

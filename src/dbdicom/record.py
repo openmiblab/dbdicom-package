@@ -94,6 +94,7 @@ class Record():
     def dialog(self):
         return self.manager.dialog
     
+    
     def set_log(self, filepath:str=None):
         """Set a new file for logging.
 
@@ -1300,45 +1301,45 @@ class Record():
             child.export_as_csv(path)
 
 
-    def export_as_nifti(self, path:str, dims:tuple=None):
-        """Export record in NIFTI format to an external directory.
+    # def export_as_nifti(self, path:str, dims:tuple=None):
+    #     """Export record in NIFTI format to an external directory.
 
-        Args:
-            path (str): path to export directory.
-            dims (tuple, optional): when set, volumes are extracted along the given dimensions and exported in single files. If dims is not set, each image will be exported in its own file. 
+    #     Args:
+    #         path (str): path to export directory.
+    #         dims (tuple, optional): when set, volumes are extracted along the given dimensions and exported in single files. If dims is not set, each image will be exported in its own file. 
 
-        See Also:
-            :func:`~export_as_png`
-            :func:`~export_as_dicom`
-            :func:`~export_as_npy`
-            :func:`~export_as_csv`
+    #     See Also:
+    #         :func:`~export_as_png`
+    #         :func:`~export_as_dicom`
+    #         :func:`~export_as_npy`
+    #         :func:`~export_as_csv`
 
-        Example:
+    #     Example:
 
-            Create a 4D series and export as NIFTI:
+    #         Create a 4D series and export as NIFTI:
 
-            >>> series = db.ones((128, 128, 10, 5))
-            >>> path = 'path\\to\\empty\\folder'
-            >>> series.export_as_nifti(path)
+    #         >>> series = db.ones((128, 128, 10, 5))
+    #         >>> path = 'path\\to\\empty\\folder'
+    #         >>> series.export_as_nifti(path)
 
-            This should create a single folder in the directory, populated with 50 NIFTI files.
+    #         This should create a single folder in the directory, populated with 50 NIFTI files.
 
-            In order to export the entire series in a single volume, provide the dimensions along which the volume is to be taken:
+    #         In order to export the entire series in a single volume, provide the dimensions along which the volume is to be taken:
 
-            >>> dims = ('SliceLocation', 'AcquisitionTime')
-            >>> series.export_as_nifti(path, dims=dims)
+    #         >>> dims = ('SliceLocation', 'AcquisitionTime')
+    #         >>> series.export_as_nifti(path, dims=dims)
 
-            This will now create a single nifti file.
+    #         This will now create a single nifti file.
 
-            Note: in this case the dimensions must be specified as slice location and acquisition time because these are the default dimensions used by series creation functions like :func:`~ones`.
-        """
-        if self.name == 'Database':
-            folder = 'Database' 
-        else:
-            folder = self.label()
-        path = export_path(path, folder)
-        for child in self.children():
-            child.export_as_nifti(path, dims=dims)
+    #         Note: in this case the dimensions must be specified as slice location and acquisition time because these are the default dimensions used by series creation functions like :func:`~ones`.
+    #     """
+    #     if self.name == 'Database':
+    #         folder = 'Database' 
+    #     else:
+    #         folder = self.label()
+    #     path = export_path(path, folder)
+    #     for child in self.children():
+    #         child.export_as_nifti(path, dims=dims)
 
 
     def export_as_npy(self, path:str, dims:tuple=None):
@@ -1905,3 +1906,4 @@ def _read_dataframe_from_instance_array_values(instances, tags):
         data.append(values)
         instance.progress(i+1, len(instances), 'Reading dataframe..')
     return pd.DataFrame(data, index=indices, columns=tags)
+

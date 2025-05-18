@@ -1,14 +1,9 @@
 # Importing annotations to handle or sign in import type hints
 from __future__ import annotations
 
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
-import vreg
 
 from dbdicom.record import Record
 from dbdicom.utils.files import gif2numpy
-from dbdicom.ds.create import read_dataset
 
 
 
@@ -60,22 +55,25 @@ class Database(Record):
     def restore(self, path=None):
         self.manager.restore()
         self.write(path)
+        return self
 
     def open(self, path):
         self.manager.open(path)
+        return self
 
     def close(self):
         return self.manager.close()
 
     def scan(self):
         self.manager.scan()
+        return self
 
     def import_dicom(self, files):
         uids = self.manager.import_datasets(files)
         return uids is not None
 
-    def import_nifti(self, files):
-        self.manager.import_datasets_from_nifti(files)
+    # def import_nifti(self, files):
+    #     self.manager.import_datasets_from_nifti(files)
 
     def import_gif(self, files):
         study = self.new_patient().new_study()
@@ -94,130 +92,131 @@ class Database(Record):
 
     def zeros(*args, **kwargs): # OBSOLETE - remove
         return zeros(*args, **kwargs)
-
-    # def export_as_dicom(self, path): 
-    #     for child in self.children():
-    #         child.export_as_dicom(path)
-
-    # def export_as_png(self, path): 
-    #     for child in self.children():
-    #         child.export_as_png(path)
-
-    # def export_as_csv(self, path): 
-    #     for child in self.children():
-    #         child.export_as_csv(path)
-
-    def pixel_values(self, series, index=None, 
-                     dims=('InstanceNumber', ), return_vals=None):
-        s = _series(self, series, index)
-        return s.pixel_values(dims=dims, return_vals=return_vals)
-
-
-    def volume(self, series, index=None, dims=None, return_coords=False) -> vreg.Volume3D:
-        s =  _series(self, series, index)
-        return s.volume(dims, return_coords=return_coords)
-
     
-    def write_volume(self, vol, series='Series', ref=None, ref_index=None, 
-                     coords=None, study=None, **kwargs):
-    
-        # Find study and reference series
-        study = _study(self, study) 
-        ref = _series(self, ref, ref_index)  
 
-        # Create new series
-        if study is not None:
-            series = study.new_series(SeriesDescription=series, **kwargs)
-        elif ref is not None:
-            series = ref.new_sibling(SeriesDescription=series, **kwargs)
+
+
+
+
+# Helper functions to convert from new-API objects (lists) into old-API objects (Records) 
+# This can be used to run old-API functions using the new API as an intermediate step
+
+
+
+
+
+def _patient(database, patient, force=False):  
+    patient_name = patient[0] if isinstance(patient, tuple) else patient
+    patient_objects = Record.patients(database, PatientName=patient_name) 
+    if len(patient_objects) == 0:
+        if force:
+            return database.new_patient(PatientName=patient_name)
         else:
-            series = self.new_series(SeriesDescription=series, **kwargs)
-
-        # Write the volume
-        series.write_volume(vol, ref=ref, coords=coords)
-        return self
-
-
-    def merge_series(self, desc, merged='Merged Series', study=None):
-
-        # Get series to merge
-        if isinstance(desc, list):
-            series = []
-            for d in desc:
-                series += self.series(SeriesDescription=d)
-        else:
-            series = self.series(SeriesDescription=desc)
-
-        # Check if all valid
-        if series == []:
-            raise ValueError(
-                "Cannot merge series " + str(desc) + ". No "
-                "series found with that SeriesDescription."
-            )
-        for s in series:
-            if s.type() != 'Series':
+            raise ValueError(f"No patients {patient_name} found.")
+    elif len(patient_objects) == 1:
+        if isinstance(patient, tuple):
+            if patient[1] >= 1:
                 raise ValueError(
-                    "Cannot merge series " + str(desc) + ". These "
-                    "are not all valid series."
+                    f"Patient {patient} does not exist. "
+                    f"Only one patient with PatientName {patient_name}."
                 )
-            
-        # Get study for new series
-        if study is None:
-            study = series[0].parent()
+        return patient_objects[0]
+    elif len(patient_objects) > 1:
+        if isinstance(patient, tuple):
+            if patient[1] >= len(patient_objects):
+                raise ValueError(
+                    f"Patient {patient} does not exist. "
+                    f"Only {len(patient_objects)} patients with PatientName {patient_name}."
+                )
+            else:
+                return patient_objects[patient[1]]
         else:
-            study = _study(self, study) 
-        
-        # Merge series
-        uid, key = self.manager.merge_series(
-            [s.uid for s in series], 
-            study.uid, 
-            SeriesDescription=merged,
+            raise ValueError(
+                f"Multiple patients found with the same PatientName {patient_name}."
+                f"Please call the function with an index for the patient you want. "
+            )             
+
+def _study(database, study, force=False):   
+
+    if len(study) != 2:
+        raise ValueError(
+            "A study is defined by 2 elements: patient and study."
         )
-        return self.record('Series', uid, key)
+    patient = _patient(database, study[0], force)
 
+    study_desc = study[-1][0] if isinstance(study[-1], tuple) else study[-1]
+    study_objects = Record.studies(patient, StudyDescription=study_desc)
+    if len(study_objects) == 0:
+        if force:
+            return patient.new_study(StudyDescription=study_desc)
+        else:
+            raise ValueError(f"No studies {study} found.")
+    elif len(study_objects) == 1:
+        if isinstance(study[-1], tuple):
+            if study[-1][1] >= 1:
+                raise ValueError(
+                    f"Study {study} does not exist. "
+                    f"Only one study with StudyDescription {study[-1][0]}. "
+                )
+        return study_objects[0]
+    elif len(study_objects) > 1:
+        if isinstance(study[-1], tuple):
+            if study[-1][1] >= len(study_objects):
+                raise ValueError(
+                    f"Study {study} does not exist. "
+                    f"Only {len(study_objects)} studies with StudyDescription {study[-1][0]}."
+                )
+            else:
+                return study_objects[study[-1][1]]
+        else:
+            raise ValueError(
+                f"Multiple studies found with the same StudyDescription {study_desc}."
+                f"Please call the function with an index for the study you want. "
+            )  
+        
+def _series(database, series, force=False):
 
+    if len(series) != 3:
+        raise ValueError(
+            "A series is defined by 3 elements: patient, study and series."
+        )
+    study = _study(database, series[:2], force)
+
+    series_desc = series[-1][0] if isinstance(series[-1], tuple) else series[-1]
+    series_objects = Record.series(study, SeriesDescription=series_desc)
+    if len(series_objects) == 0:
+        if force:
+            return study.new_series(SeriesDescription=series_desc)
+        else:
+            raise ValueError(f"No series {series} found.")
+    elif len(series_objects) == 1:
+        if isinstance(series[-1], tuple):
+            if series[-1][1] >= 1:
+                raise ValueError(
+                    f"Series {series} does not exist. "
+                    f"Only one series with SeriesDescription {series[-1][0]}. "
+                )
+        return series_objects[0]
+    elif len(series_objects) > 1:
+        if isinstance(series[-1], tuple):
+            if series[-1][1] >= len(series_objects):
+                raise ValueError(
+                    f"Series {series} does not exist. "
+                    f"Only {len(series_objects)} studies with SeriesDescription {series[-1][0]}."
+                )
+            else:
+                return series_objects[series[-1][1]]
+        else:
+            raise ValueError(
+                f"Multiple series found with the same SeriesDescription {series_desc}."
+                f"Please call the function with an index for the series you want. "
+            )  
+            
 
 
 
 def zeros(database, shape, dtype='mri'): # OBSOLETE - remove
     study = database.new_study()
     return study.zeros(shape, dtype=dtype)
-
-
-def _study(database, study):
-        
-    if isinstance(study, str):
-        studies = database.studies(StudyDescription=study)
-        if studies == []:
-            study = database.new_study(StudyDescription=study)
-        elif len(studies) == 1:
-            study = studies[0]
-        else:
-            raise ValueError(
-                "Multiple studies found with the same "
-                "StudyDescription. Use studies() to list them all and "
-                "select one.")  
-    return study
-
-
-def _series(database, series, index=None):
-
-    if isinstance(series, str):
-        all_series = database.series(SeriesDescription=series)
-        if all_series == []:
-            raise ValueError(
-                "No series found with the SeriesDescription " + series)  
-        elif len(all_series) == 1:
-            series = all_series[0]
-        elif index is not None:
-            series = all_series[index]
-        else:
-            raise ValueError(
-                "Multiple series found with the "
-                "SeriesDescription " + series + ". Use series() to select"
-                "a single one.") 
-        
-    return series
-
 
 

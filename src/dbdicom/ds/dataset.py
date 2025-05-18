@@ -3,6 +3,7 @@
 import os
 from datetime import datetime
 import struct
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
@@ -50,28 +51,28 @@ class DbDataset(Dataset):
 
     def set_value(self, tags, values):
         return set_value(self, tags, values)
+    
+    def affine(*args, **kwargs):
+        return affine(*args, **kwargs)
+    
+    def set_affine(*args, **kwargs):
+        set_affine(*args, **kwargs)
+
+    def volume(*args, **kwargs):
+        return volume(*args, **kwargs)
+    
+    def set_volume(*args, **kwargs):
+        set_volume(*args, **kwargs)
 
 
     # CUSTOM ATTRIBUTES
 
-
-    # def affine(self):
-    #     return affine(self)
-    
-    # def set_affine(self):
-    #     set_affine(self)
 
     # def pixel_values(self):
     #     return pixel_values(self)
 
     # def set_pixel_values(self, array, value_range=None):
     #     set_pixel_values(self, array, value_range=value_range)
-
-    # def volume(self):
-    #     return volume(self)
-    
-    # def set_volume(self):
-    #     set_volume(self)
 
     # def window(self):
     #     return get_window(self)
@@ -158,7 +159,7 @@ def get_values(ds, tags):
     """Return a list of values for a dataset"""
 
     # https://pydicom.github.io/pydicom/stable/guides/element_value_types.html
-    if not isinstance(tags, list): 
+    if np.isscalar(tags): 
         return get_values(ds, [tags])[0]
             
     row = []  
@@ -199,7 +200,7 @@ def get_values(ds, tags):
 
 def set_values(ds, tags, values, VR=None, coords=None):
 
-    if not isinstance(tags, list): 
+    if np.isscalar(tags): 
         tags = [tags]
         values = [values]
         VR = [VR]
@@ -246,7 +247,7 @@ def value(ds, tags):
     # Same as get_values but without VR lookup
 
     # https://pydicom.github.io/pydicom/stable/guides/element_value_types.html
-    if not isinstance(tags, list): 
+    if np.isscalar(tags): 
         return values(ds, [tags])[0]
             
     row = []  
@@ -279,7 +280,7 @@ def value(ds, tags):
 def set_value(ds, tags, values):
     # Same as set_values but without VR lookup
     # This excludes new private tags - set those using add_private()
-    if not isinstance(tags, list): 
+    if np.isscalar(tags): 
         tags = [tags]
         values = [values]
 
@@ -364,9 +365,9 @@ def read_data(files, tags, status=None, path=None, message='Reading DICOM folder
         Each column corresponds to a Tag in the list of Tags
         The returned dataframe is sorted by the given tags.
     """
-    if not isinstance(files, list):
+    if np.isscalar(files):
         files = [files]
-    if not isinstance(tags, list):
+    if np.isscalar(tags):
         tags = [tags]
     dict = {}
     for i, file in enumerate(files):
@@ -392,32 +393,17 @@ def read_data(files, tags, status=None, path=None, message='Reading DICOM folder
 
 
 
-def read_dataframe(files, tags, status=None, path=None, message='Reading DICOM folder..', images_only=False):
-    """Reads a list of tags in a list of files.
-
-    Arguments
-    ---------
-    files : str or list
-        A filepath or a list of filepaths
-    tags : str or list 
-        A DICOM tag or a list of DICOM tags
-    status : StatusBar
-
-    Creates
-    -------
-    dataframe : pandas.DataFrame
-        A Pandas dataframe with one row per file
-        The index is the file path 
-        Each column corresponds to a Tag in the list of Tags
-        The returned dataframe is sorted by the given tags.
-    """
-    if not isinstance(files, list):
+def read_dataframe(files, tags, status=None, path=None, images_only=False):
+    if np.isscalar(files):
         files = [files]
-    if not isinstance(tags, list):
+    if np.isscalar(tags):
         tags = [tags]
     array = []
     dicom_files = []
-    for i, file in enumerate(files):
+    iterator = enumerate(files)
+    if status is None:
+        iterator = tqdm(iterator, desc='Reading DICOM folder')
+    for i, file in iterator:
         if status is not None: 
             status.progress(i+1, len(files))
         try:
@@ -781,20 +767,32 @@ def set_lut(ds, RGB):
 
 
 
-def affine(ds):
-    return image.affine_matrix(
-        get_values(ds, 'ImageOrientationPatient'), 
-        get_values(ds, 'ImagePositionPatient'), 
-        get_values(ds, 'PixelSpacing'), 
-        get_values(ds, 'SliceThickness'))
+def affine(ds, multislice=False):
+    if multislice:
+        return image.affine_matrix(
+            get_values(ds, 'ImageOrientationPatient'), 
+            get_values(ds, 'ImagePositionPatient'), 
+            get_values(ds, 'PixelSpacing'), 
+            get_values(ds, 'SpacingBetweenSlices'),
+        )
+    else:
+        return image.affine_matrix(
+            get_values(ds, 'ImageOrientationPatient'), 
+            get_values(ds, 'ImagePositionPatient'), 
+            get_values(ds, 'PixelSpacing'), 
+            get_values(ds, 'SliceThickness'),
+        )
 
 
-def set_affine(ds, affine):
+def set_affine(ds, affine, multislice=False):
     if affine is None:
         raise ValueError('The affine cannot be set to an empty value')
     v = image.dismantle_affine_matrix(affine)
     set_values(ds, 'PixelSpacing', v['PixelSpacing'])
-    set_values(ds, 'SliceThickness', v['SliceThickness'])
+    if multislice:
+        set_values(ds, 'SpacingBetweenSlices', v['SliceThickness'])
+    else:
+        set_values(ds, 'SliceThickness', v['SliceThickness'])
     set_values(ds, 'ImageOrientationPatient', v['ImageOrientationPatient'])
     set_values(ds, 'ImagePositionPatient', v['ImagePositionPatient'])
     set_values(ds, 'SliceLocation', np.dot(v['ImagePositionPatient'], v['slice_cosine']))
@@ -904,14 +902,30 @@ def set_pixel_values_mr_image(ds, array):
     ds.PixelData = array.tobytes()
 
 
-def volume(ds):
-    return vreg.volume(pixel_values(ds), affine(ds))
+def volume(ds, multislice=False):
+    return vreg.volume(pixel_values(ds), affine(ds, multislice))
 
-def set_volume(ds, volume:vreg.Volume3D):
+def set_volume(ds, volume:vreg.Volume3D, multislice=False):
     if volume is None:
         raise ValueError('The volume cannot be set to an empty value.')
-    set_pixel_values(ds, np.squeeze(volume.values))
-    set_affine(ds, volume.affine)
+    image = np.squeeze(volume.values)
+    if image.ndim != 2:
+        raise ValueError("Can only write 2D images to a dataset.")
+    set_pixel_values(ds, image)
+    set_affine(ds, volume.affine, multislice)
+    if volume.coords is not None:
+        # All other dimensions should have size 1
+        coords = volume.coords.reshape((volume.coords.shape[0], -1))
+        for i, d in enumerate(volume.dims):
+            try:
+                set_values(ds, d, coords[i,0])
+            except KeyError:
+                raise ValueError(
+                    "Cannot write volume to DICOM. "
+                    f"Volume dimension {d} is not a recognized DICOM data-element. "
+                    f"Use Volume3D.set_dims() with proper DICOM keywords "
+                    "or (group, element) tags to change the dimensions."
+                )
 
 
 def image_type(ds):

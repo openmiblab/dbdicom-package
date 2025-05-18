@@ -99,18 +99,18 @@ class Instance(Record):
         df.to_csv(filepath)
 
 
-    def export_as_nifti(self, path, affine=None):
-        # Export series as a single Nifty file
-        ds = self.get_dataset()
-        if affine is None:
-            affine = ds.get_values('affine_matrix')
-        array = self.pixel_values()
-        dicomHeader = nib.nifti1.Nifti1DicomExtension(2, ds)
-        niftiObj = nib.Nifti1Image(array, image.affine_to_RAH(affine))
-        niftiObj.header.extensions.append(dicomHeader)
-        filepath = self.label()
-        filepath = os.path.join(path, filepath + '.nii')
-        nib.save(niftiObj, filepath)
+    # def export_as_nifti(self, path, affine=None):
+    #     # Export series as a single Nifty file
+    #     ds = self.get_dataset()
+    #     if affine is None:
+    #         affine = ds.get_values('affine_matrix')
+    #     array = self.pixel_values()
+    #     dicomHeader = nib.nifti1.Nifti1DicomExtension(2, ds)
+    #     niftiObj = nib.Nifti1Image(array, image.affine_to_RAH(affine))
+    #     niftiObj.header.extensions.append(dicomHeader)
+    #     filepath = self.label()
+    #     filepath = os.path.join(path, filepath + '.nii')
+    #     nib.save(niftiObj, filepath)
 
 
     def export_as_npy(self, path):
@@ -218,56 +218,6 @@ def set_pixel_values(frame:Instance, array):
   
 
 
-# def map_to(source, target):
-#     """Map non-zero image pixels onto a target image.
-    
-#     Overwrite pixel values in the target"""
-
-#     dss = source.get_dataset()
-#     dst = target.get_dataset()
-
-#     # Create a coordinate array for all pixels in the source
-#     coords = np.empty((dss.Rows*dss.Columns, 3), dtype=np.uint16)
-#     for x in range(dss.Columns):
-#         for y in range(dss.Rows):
-#             coords[x*dss.Columns+y,:] = [x,y,0]
-
-#     # Apply coordinate transformation from source to target
-#     affineSource = dss.get_affine_matrix()
-#     affineTarget = dst.get_affine_matrix()
-#     sourceToTarget = np.linalg.inv(affineTarget).dot(affineSource)
-#     coords_target = nib.affines.apply_affine(sourceToTarget, coords)
-
-#     # Interpolate (nearest neighbour) and extract inslice coordinates
-#     coords_target = np.round(coords_target, 3).astype(int)
-#     xt = tuple([c[0] for c in coords_target if c[2] == 0])
-#     yt = tuple([c[1] for c in coords_target if c[2] == 0])
-#     xs = tuple([c[0] for c in coords])
-#     ys = tuple([c[1] for c in coords])
-
-#     ## COORDINATES DO NOT MATCH UP because of c[2] = 0 condition
-#     ## Needs a different indexing approach
-
-#     # Set values in the target image
-#     source_array = dss.get_pixel_array()
-#     target_array = np.zeros((dst.Columns, dst.Rows))
-#     target_array[(xt, yt)] = source_array[(xs, ys)]
-#     # for masking map values to {0, 1}
-#     result = source.new_sibling()
-#     result.set_pixel_array(target_array)
-
-#     return result
-
-# # Obsolete
-# def map_mask_to(record, target):
-#     """Map non-zero image pixels onto a target image.
-#     Overwrite pixel values in the target"""
-#     dsr = record.get_dataset()
-#     dst = target.get_dataset()
-#     array = dsr.map_mask_to(dst)
-#     result = target.copy_to(record.parent()) # inherit geometry header from target
-#     result.set_pixel_array(array)
-#     return result
 
 
 
