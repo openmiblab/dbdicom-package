@@ -8,7 +8,7 @@
 project = 'dbdicom'
 copyright = '2022-2025, QIB-Sheffield'
 author = 'QIB-Sheffield'
-release = '0.2.4'
+release = '0.2.6'
 
 # -- Path setup --------------------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
