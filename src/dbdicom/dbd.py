@@ -5,13 +5,14 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import vreg
+from pydicom.dataset import Dataset
 
 import dbdicom.utils.arrays
 import dbdicom.utils.files as filetools
 import dbdicom.utils.dcm4che as dcm4che
-import dbdicom.ds.dataset as dbdataset
-from dbdicom.ds.create import read_dataset, new_dataset
+import dbdicom.dataset as dbdataset
 import dbdicom.register as register
+import dbdicom.mods as mods
 
 
 
@@ -154,9 +155,9 @@ class DataBaseDicom():
         values = []
         volumes = []
         for f in tqdm(files, desc='Reading volume..'):
-            ds = read_dataset(f)  
-            values.append(ds.get_values(dims))
-            volumes.append(ds.volume(multislice))
+            ds = dbdataset.read_dataset(f)  
+            values.append(dbdataset.get_values(ds, dims))
+            volumes.append(dbdataset.volume(ds, multislice))
 
         # Format as mesh
         coords = np.stack(values, axis=-1)
@@ -188,14 +189,14 @@ class DataBaseDicom():
             ref:list=None, multislice=False,
         ):
         if ref is None:
-            ds = new_dataset('MRImage')
+            ds = dbdataset.new_dataset('MRImage')
         else:
             if ref[0] == series[0]:
                 ref_mgr = self
             else:
                 ref_mgr = DataBaseDicom(ref[0])
             files = register.files(ref_mgr.register, ref)
-            ds = read_dataset(files[0]) 
+            ds = dbdataset.read_dataset(files[0]) 
 
         # Get the attributes of the destination series
         attr = self._attributes(series)
@@ -205,15 +206,15 @@ class DataBaseDicom():
         if vol.ndim==3:
             slices = vol.split()
             for i, sl in tqdm(enumerate(slices), desc='Writing volume..'):
-                ds.set_volume(sl, multislice)
+                dbdataset.set_volume(ds, sl, multislice)
                 self._write_dataset(ds, attr, n + 1 + i, new_instances)
         else:
             i=0
             vols = vol.separate().reshape(-1)
             for vt in tqdm(vols, desc='Writing volume..'):
                 for sl in vt.split():
-                    ds.set_volume(sl, multislice)
-                    ds.set_value(sl.dims, sl.coords[:,...])
+                    dbdataset.set_volume(ds, sl, multislice)
+                    dbdataset.set_value(ds, sl.dims, sl.coords[:,...])
                     self._write_dataset(ds, attr, n + 1 + i, new_instances)
                     i+=1
             return self
@@ -251,20 +252,20 @@ class DataBaseDicom():
         arrays = np.empty(len(files), dtype=dict)
         if include is not None:
             values = np.empty(len(files), dtype=dict)
-        for i, f in tqdm(enumerate(files), desc='Reading pixel_values..'):
-            ds = read_dataset(f)  
-            coords.append(ds.get_values(dims))
+        for i, f in tqdm(enumerate(files), desc='Reading pixel data..'):
+            ds = dbdataset.read_dataset(f)  
+            coords.append(dbdataset.get_values(ds, dims))
             # save as dict so numpy does not stack as arrays
-            arrays[i] = {'pixel_values': ds.get_values('pixel_values')}
+            arrays[i] = {'pixel_data': dbdataset.pixel_data(ds)}
             if include is not None:
-                values[i] = {'values': ds.get_values(params)}
+                values[i] = {'values': dbdataset.get_values(ds, params)}
 
         # Format as mesh
         coords = np.stack([v for v in coords], axis=-1)
         coords, inds = dbdicom.utils.arrays.meshvals(coords)
 
         arrays = arrays[inds].reshape(coords.shape[1:])
-        arrays = np.stack([a['pixel_values'] for a in arrays.reshape(-1)], axis=-1)
+        arrays = np.stack([a['pixel_data'] for a in arrays.reshape(-1)], axis=-1)
         arrays = arrays.reshape(arrays.shape[:2] + coords.shape[1:])
 
         if include is None:
@@ -346,8 +347,8 @@ class DataBaseDicom():
             files = register.files(self.register, entity)
             v = np.empty((len(files), len(attributes)), dtype=object)
             for i, f in enumerate(files):
-                ds = read_dataset(f)
-                v[i,:] = ds.get_values(attributes)
+                ds = dbdataset.read_dataset(f)
+                v[i,:] = dbdataset.get_values(ds, attributes)
         return v
 
     def _copy_patient(self, from_patient, to_patient):
@@ -394,7 +395,7 @@ class DataBaseDicom():
         new_instances = {}
         for i, f in tqdm(enumerate(files), total=len(files), desc=f'Copying series {to_series[1:]}'):
             # Read dataset and assign new properties
-            ds = read_dataset(f)
+            ds = dbdataset.read_dataset(f)
             self._write_dataset(ds, attr, n + 1 + i, new_instances)
         self._update_register(new_instances)
 
@@ -429,9 +430,9 @@ class DataBaseDicom():
         try:
             # If the patient exists and has files, read from file
             files = register.files(self.register, patient)
-            attr = dbdataset.module_patient()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = mods.PATIENT_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the patient does not exist, generate values
             attr = ['PatientID', 'PatientName']
@@ -446,9 +447,9 @@ class DataBaseDicom():
         try:
             # If the study exists and has files, read from file
             files = register.files(self.register, study)
-            attr = dbdataset.module_study()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = mods.STUDY_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the study does not exist, generate values
             attr = ['StudyInstanceUID', 'StudyDescription', 'StudyDate']
@@ -464,9 +465,9 @@ class DataBaseDicom():
         try:
             # If the series exists and has files, read from file
             files = register.files(self.register, series)
-            attr = dbdataset.module_series()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = mods.SERIES_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the series does not exist or is empty, generate values
             try:
@@ -482,16 +483,16 @@ class DataBaseDicom():
         return study_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
         
-    def _write_dataset(self, ds:dbdataset.DbDataset, attr:dict, instance_nr:int, register:dict):
+    def _write_dataset(self, ds:Dataset, attr:dict, instance_nr:int, register:dict):
         # Set new attributes 
         attr['SOPInstanceUID'] = dbdataset.new_uid()
         attr['InstanceNumber'] = instance_nr
-        ds.set_values(list(attr.keys()), list(attr.values()))
+        dbdataset.set_values(ds, list(attr.keys()), list(attr.values()))
         # Save results in a new file
         rel_path = os.path.join('dbdicom', dbdataset.new_uid() + '.dcm') 
-        ds.write(os.path.join(self.path, rel_path))
+        dbdataset.write(ds, os.path.join(self.path, rel_path))
         # Add a row to the register
-        register[rel_path] = ds.get_values(self.register.columns)
+        register[rel_path] = dbdataset.get_values(ds, self.register.columns)
 
 
     def _update_register(self, new_instances:dict):

@@ -7,19 +7,16 @@ requires = ['setuptools>=61.2']
 
 [project]
 name = "dbdicom"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [ 
-    "matplotlib",
-    "nibabel",
+    "tqdm",
+    "importlib-resources",
     "numpy",
     "pandas",
+    'vreg',
     "pydicom", 
     "python-gdcm",
     "pylibjpeg-libjpeg",
-    "importlib-resources", #necessary?
-    'scipy',
-    'imageio',
-    'vreg',
 ]
 
 # optional information
@@ -54,19 +51,11 @@ keywords = ['python', "medical imaging", "DICOM"]
 requires-python = ">=3.6"
 
 [project.urls]
-"Homepage" = "https://qib-sheffield.github.io/dbdicom/"
+"Homepage" = "https://openmiblab.github.io/dbdicom/"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[project.optional-dependencies]
-extensions = [
-    # "scipy",
-    "scikit-image", 
-    "itk-elastix",
-    "dipy",
-    "scikit-learn",
-]
 
 
 
