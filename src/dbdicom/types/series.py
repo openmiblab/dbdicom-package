@@ -7,7 +7,7 @@ from numbers import Number
 from tqdm import tqdm
 
 import numpy as np
-import nibabel as nib
+# import nibabel as nib
 import vreg
 
 
@@ -18,6 +18,9 @@ import dbdicom.utils.image as image_utils
 from dbdicom.manager import Manager
 # import dbdicom.extensions.scipy as scipy_utils
 from dbdicom.utils.files import export_path
+
+#import dbdicom.types.series_methods as series_methods
+import dbdicom.utils.arrays
 
 
 class Series(Record):
@@ -75,7 +78,7 @@ class Series(Record):
         else:
             return self.record('Instance', uids, **attr)
 
-    def export_as_dicom(self, path): 
+    def export_as_dicom(self, path, **kwargs): 
         folder = self.label()
         path = export_path(path, folder)
         # Create a copy so that exported datasets have different UIDs.
@@ -84,7 +87,11 @@ class Series(Record):
         mgr.open(path)
         for i in copy.instances():
             ds = i.get_dataset()
+            if kwargs != {}:
+                ds.set_values(list(kwargs.keys()), list(kwargs.values()))
             mgr.import_dataset(ds)
+        mgr.save()
+        mgr.close()
         copy.remove()
 
     def export_as_png(self, path, **kwargs):
@@ -120,13 +127,13 @@ class Series(Record):
             with open(filepath, 'wb') as f:
                 np.save(f, array)
 
-    def export_as_nifti(self, path, dims='SliceLocation'):
-        vols = self.volumes(dims=dims, stack=True)
-        if isinstance(vols, vreg.Volume3D):
-            vreg.write_nifti(vols, path)
-        else:
-            for i, v in enumerate(vols.reshape(-1)):
-                vreg.write_nifti(v, path[:-7] + '(' + str(i) + ').nii.gz')
+    # def export_as_nifti(self, path, dims='SliceLocation'):
+    #     vols = self.volumes(dims=dims, stack=True)
+    #     if isinstance(vols, vreg.Volume3D):
+    #         vreg.write_nifti(vols, path)
+    #     else:
+    #         for i, v in enumerate(vols.reshape(-1)):
+    #             vreg.write_nifti(v, path[:-7] + '(' + str(i) + ').nii.gz')
 
 
     def import_dicom(self, files):
@@ -219,7 +226,7 @@ class Series(Record):
 
         # If requested, mesh values
         if mesh:
-            values, _ = _meshvals(values)
+            values, _ = dbdicom.utils.arrays.meshvals(values)
             mshape = values.shape[1:]
 
         # Build coordinates
@@ -406,7 +413,7 @@ class Series(Record):
 
         # If requested, mesh values
         if mesh:
-            cmesh, inds = _meshvals(cvalues)
+            cmesh, inds = dbdicom.utils.arrays.meshvals(cvalues)
             values = _meshdata(values, inds, cmesh)
             cvalues = cmesh
             
@@ -523,7 +530,7 @@ class Series(Record):
 
         # If requested, mesh values
         if mesh:
-            cmesh, inds = _meshvals(cvalues)
+            cmesh, inds = dbdicom.utils.arrays.meshvals(cvalues)
             values = _meshdata(values, inds, cmesh)
             frames = _meshdata(frames.reshape((1,frames.size)), inds, cmesh)
             frames = frames[0,...]
@@ -739,7 +746,7 @@ class Series(Record):
 
         # If requested, mesh values
         if mesh:
-            coord_values, inds = _meshvals(coord_values)
+            coord_values, inds = dbdicom.utils.arrays.meshvals(coord_values)
             if values.size > 0:
                 values = _meshdata(values, inds, coord_values) 
         
@@ -757,8 +764,8 @@ class Series(Record):
         # Format returned coordinates
         if return_coords:
             vcoords = {
-                tag: np.squeeze(coord_values[i,...], axis=0)
-                #tag: coord_values[i,...]
+                #tag: np.squeeze(coord_values[i,...], axis=0)
+                tag: coord_values[i,...].reshape(coord_values.shape[1:])
                 for i, tag in enumerate(dims)
             }
         
@@ -766,11 +773,11 @@ class Series(Record):
         if len(return_vals) > 0:
             if scalar_return_val:
                 #values = np.squeeze(values[0,...], axis=0)
-                values = values[0,...]
+                values = values[0,...].reshape(values.shape[1:])
             else:
                 values = {
-                    tag: np.squeeze(values[i,...], axis=0)
-                    #tag: values[i,...]
+                    #tag: np.squeeze(values[i,...], axis=0)
+                    tag: values[i,...].reshape(values.shape[1:])
                     for i, tag in enumerate(return_vals)
                 }
 
@@ -784,153 +791,6 @@ class Series(Record):
             return ret[0]
         else:
             return ret
-        
-
-    # def _pixel_values(self, dims=('InstanceNumber', ), return_coords=False, 
-    #                  slice={}, coords={}, **filters) -> np.ndarray:
-    #     """Return a numpy.ndarray with pixel data.
-    
-    #     Args:
-    #         dims (tuple, optional): Dimensions of the result, as a tuple of 
-    #           valid DICOM tags of any length. If *dims* is not provided, 
-    #           pixel values are ordered by instance number. Defaults to None.
-    #         inds (dict, optional): Dictionary with indices to retrieve a 
-    #           slice of the entire array. Defaults to None.
-    #         select (dict, optional): A dictionary of values for DICOM 
-    #           attributes to filter the result. By default the data are not filtered.
-    #         filters (dict, optional): keyword arguments to filter the data 
-    #           by value of DICOM attributes.
-
-    #     Returns:
-    #         np.ndarray: pixel data. The number of dimensions will be 2 plus 
-    #         the number of elements in *dim*. The first two indices will 
-    #         enumerate (column, row) indices in the slice, the other dimensions 
-    #         are as specified by the *dims* argument. 
-            
-    #         The function returns an empty array when no data are found at the 
-    #         specified locations.
-
-    #     Raises:
-    #         ValueError: Indices must be in the dimensions provided. If *ind* 
-    #           is set but keys are not part of *dims*.
-    #         ValueError: if the images are different shapes.
-
-    #     See also:
-    #         `set_pixel_values`
-
-    #     Example:
-    #         Create a zero-filled array with 3 slice dimensions:
-
-    #         >>> coords = {
-    #         ...    'SliceLocation': 10*np.arange(4),
-    #         ...    'FlipAngle': np.array([2, 15, 30]),
-    #         ...    'RepetitionTime': np.array([2.5, 5.0]),
-    #         ... }
-    #         >>> zeros = db.zeros((128,64,4,3,2), coords)
-
-    #         Retrieve the pixel array of the series:
-
-    #         >>> dims = tuple(coords)
-    #         >>> array = zeros.pixel_values(dims)
-    #         >>> array.shape
-    #         (128, 64, 4, 3, 2)
-
-    #         To retrieve an array containing only the data with flip angle 15:
-
-    #         >>> array = zeros.pixel_values(dims, FlipAngle=15)
-    #         >>> array.shape
-    #         (128, 64, 4, 1, 2)
-
-    #         If no data fit the requirement, and empty array is returned:
-
-    #         >>> array = zeros.pixel_values(dims, FlipAngle=15)
-    #         >>> array.size
-    #         0
-
-    #         Multiple possible values can be specified as an array:
-
-    #         >>> array = zeros.pixel_values(dims, FlipAngle=np.array([15,30]))
-    #         >>> array.shape
-    #         (128, 64, 4, 2, 2)
-
-    #         And multiple filters can be specified by adding keyword arguments. The following returns an array of pixel values with flip angle of 15 or 30, and slice location of 10 or 20:
-
-    #         >>> array = zeros.pixel_values(dims, FlipAngle=np.array([15,30]), SliceLocation=np.array([10,20]))
-    #         >>> array.shape
-    #         (128, 64, 2, 2, 2)
-
-    #         The filters can be any DICOM attribute:
-
-    #         >>> array = zeros.pixel_values(dims, AcquisitionTime=0)
-    #         >>> array.size
-    #         0
-
-    #         The filters can also be specified as a dictionary of values:
-
-    #         >>> array = zeros.pixel_values(dims, select={'FlipAngle': 15})
-    #         >>> array.shape
-    #         (128, 64, 4, 1, 2)
-
-    #         Since keywords need to be strings in python, this is the only way to specify filters with (group, element) tags:
-
-    #         >>> array = zeros.pixel_values(dims, select={(0x0018, 0x1314): 15})
-    #         >>> array.shape
-    #         (128, 64, 4, 1, 2)
-
-    #         Using the *inds* argument, the pixel array can be indexed to 
-    #         avoid reading a large array if only a subarray is required:
-
-    #         >>> array = zeros.pixel_values(dims, inds={'FlipAngle': 1})
-    #         >>> array.shape
-    #         (128, 64, 4, 1, 2)
-
-    #         Note unlike filters defind by *value*, the indices must be 
-    #         provided in the dimensions of the array. If not, a `ValueError` is raised:
-
-    #         >>> zeros.pixel_values(dims, inds={'AcquisitionTime':0})
-    #         ValueError: Indices must be in the dimensions provided.
-    #     """
-    #     if np.isscalar(dims):
-    #         dims = (dims,)
-    #     frames = self.frames(dims, return_coords=return_coords, slice=slice, 
-    #                          coords=coords, **filters)
-    #     if return_coords:
-    #         frames, fcoords = frames
-    #     if frames.size == 0:
-    #         shape = (0,0) + frames.shape
-    #         values = np.array([]).reshape(shape)
-    #         if return_coords:
-    #             return values, fcoords
-    #         else:
-    #             return values
-        
-    #     # Read values
-    #     fshape = frames.shape
-    #     frames = frames.ravel()
-    #     values = []
-    #     for i, frame in tqdm(enumerate(frames), total=len(frames), 
-    #                          desc='Reading pixel values..', 
-    #                          disable=self.in_gui()):
-    #         if self.in_gui():
-    #             self.progress(i+1, len(frames), 'Reading pixel values..')
-    #         #v = f.get_dataset().get_values(attributes) # can include pixel_values & values
-    #         values.append(frame.pixel_values())
-
-    #     # Check that all matrix sizes are the same
-    #     vshape = np.array([v.shape for v in values])
-    #     vshape = np.unique(vshape.T, axis=1)
-    #     if vshape.shape[1] > 1:
-    #         msg = 'Cannot extract an array of pixel values - not all frames have the same matrix size.'
-    #         raise ValueError(msg)
-        
-    #     # Create the array
-    #     values = np.stack(values, axis=-1)
-    #     values = values.reshape(values.shape[:2] + fshape)
-
-    #     if return_coords:
-    #         return values, fcoords
-    #     else:
-    #         return values
         
 
     def expand(self, coords={}, gridcoords={}): # gridcoords -> slice
@@ -1438,8 +1298,6 @@ class Series(Record):
         else:
             return uvals
     
-
-
     
 
     def set_pixel_values(self, values:np.ndarray, dims:tuple=None, slice={}, coords={}, **filters):
@@ -1498,26 +1356,58 @@ class Series(Record):
             frame.set_pixel_values(values[:,:,f])
 
 
-    def volume(self, dims=None, return_coords=False) -> vreg.Volume3D:
+    def volume(self, dims=None, multislice=False, firstslice=False) -> vreg.Volume3D:
 
-        if isinstance(dims, str):
-            dims = (dims, )
         if dims is None:
-            dims = ('SliceLocation', )
+            dims = []
+        elif isinstance(dims, str):
+            dims = [dims]
         else:
-            dims = ('SliceLocation', ) + dims
+            dims = list(dims)
+        dims = ['SliceLocation'] + dims
 
-        if return_coords:
-            vols, coords = self.values('volume', dims=dims, return_coords=True)
-            del coords['SliceLocation']
-            return vreg.join(vols), coords
-        else:
-            vols = self.values('volume', dims=dims)
-            return vreg.join(vols)
+        # Get all frames and return if empty
+        frames = self.instances()
+        if frames == []:
+            raise ValueError("Empty series")
+
+        # Read frames
+        values = []
+        volumes = []
+        for i, f in tqdm(enumerate(frames), total=len(frames), desc='Reading values..', disable=self.in_gui()):
+            if self.in_gui():
+                self.progress(i+1,len(frames), 'Reading values..')
+            ds = f.get_dataset()
+            values.append(ds.get_values(dims))
+            volumes.append(ds.volume(multislice))
+
+        # Format as mesh
+        coords = np.stack(values, axis=-1)
+        coords, inds = _meshvals(coords)
+        vols = np.array(volumes)
+        vols = vols[inds].reshape(coords.shape[1:])
+
+        # Check that all slices have the same coordinates
+        c0 = coords[1:,0,...]
+        if not firstslice:
+            for k in range(coords.shape[1]-1):
+                if not np.array_equal(coords[1:,k+1,...], c0):
+                    raise ValueError(
+                        "Cannot build a single volume. Not all slices "
+                        "have the same coordinates. \nIf you set " 
+                        "firstslice=True, the coordinates of the lowest "
+                        "slice will be assigned to the whole volume."     
+                    )
+
+        # Join 2D volumes into 3D volumes
+        vol = vreg.join(vols)
+        if vol.ndim > 3:
+            vol.set_coords(c0)
+            vol.set_dims(dims[1:])
+        return vol
 
 
-    def write_volume(self, vol:vreg.Volume3D, ref:Series=None, 
-                     coords:dict=None) -> Series:
+    def write_volume(self, vol:vreg.Volume3D, ref:Series=None, multislice=False) -> Series:
         # Get template dataset
         if ref is None:
             ds = new_dataset('MRImage')
@@ -1528,20 +1418,13 @@ class Series(Record):
         if vol.ndim==3:
             slices = vol.split()
             for sl in tqdm(slices, desc='Writing volume..'):
-                ds.set_values('volume', sl)
+                ds.set_volume(sl, multislice)
                 self.write_dataset(ds)
         else:
             vols = vol.separate().reshape(-1)
             for t, vt in tqdm(enumerate(vols), desc='Writing volume..'):
-                if coords is not None:
-                    # Take a slice out of the coordinates
-                    crds = list(coords.keys())
-                    vals = [v.reshape(-1)[t] for v in coords.values()]
                 for sl in vt.split():
-                    if coords is None:
-                        ds.set_values('volume', sl)
-                    else:
-                        ds.set_values(['volume'] + crds, [sl] + vals)
+                    ds.set_volume(sl, multislice)
                     self.write_dataset(ds)
         return self
     
@@ -2714,14 +2597,11 @@ def _as_meshcoords(coords):
     # First check that they are proper coordinates
     values = _coords_vals(coords)
     _check_if_ivals(values)
-    values, _ = _meshvals(values)
+    values, _ = dbdicom.utils.arrays.meshvals(values)
     meshcoords = {}
     for i, c in enumerate(coords):
         meshcoords[c] = values[i,...]
     return meshcoords
-
-
-
 
 def _meshdata(vals, sorted_indices, cmesh):
     sorted_array = vals[:, sorted_indices]
@@ -2729,36 +2609,7 @@ def _meshdata(vals, sorted_indices, cmesh):
     return sorted_array.reshape(shape)
 
 
-def _meshvals(coords):
-    # Input array shape: (d, f) with d = nr of dims and f = nr of frames
-    # Output array shape: (d, f1,..., fd)
-    if coords.size == 0:
-        return np.array([])
-    # Sort by column
-    sorted_indices = np.lexsort(coords[::-1])
-    sorted_array = coords[:, sorted_indices]
-    # Find shape
-    shape = _mesh_shape(sorted_array)  
-    # Reshape
-    mesh_array = sorted_array.reshape(shape)
-    return mesh_array, sorted_indices
 
-
-def _mesh_shape(sorted_array):
-    
-    nd = np.unique(sorted_array[0,:]).size
-    shape = (sorted_array.shape[0], nd)
-
-    for dim in range(1,shape[0]):
-        shape_dim = (shape[0], np.prod(shape[1:]), -1)
-        sorted_array = sorted_array.reshape(shape_dim)
-        nd = [np.unique(sorted_array[dim,d,:]).size for d in range(shape_dim[1])]
-        shape = shape + (max(nd),)
-
-    if np.prod(shape) != sorted_array.size:
-        raise ValueError('These are not mesh coordinates.') 
-    
-    return shape
 
     
 # Original versio - very slow

@@ -60,34 +60,8 @@ requires-python = ">=3.6"
 where = ["src"]
 
 [project.optional-dependencies]
-# docs = [
-#     "sphinx",
-#     "pydata-sphinx-theme",
-#     "myst-parser", 
-#     "sphinx-copybutton",
-#     "sphinx-design",
-#     "sphinx-remove-toctrees",
-#     "autodocsumm",
-#     "docutils",
-#     "sphinxcontrib-applehelp",
-#     "sphinxcontrib-devhelp",
-#     "sphinxcontrib-htmlhelp",
-#     "sphinxcontrib-jsmath",
-#     "sphinxcontrib-qthelp",
-#     "sphinxcontrib-serializinghtml",
-#     "sphinx-gallery",
-# ]
 extensions = [
     # "scipy",
-    # restricting to the latest stable release for now due to a bug
-    # introduced in 0.20.0 that causes executables to crash. The bug is known
-    # and a fix will presumably be included in upcoming releases
-    # in which case this restriction can be removed.
-    # https://github.com/scikit-image/scikit-image/issues/6784
-    # https://github.com/scientific-python/lazy_loader/pull/39
-    # Note on pyton 3.11 scikit image must be installed as
-    # pip install --pre scikit-image<=0.19.0 
-    # until a new version is released (0.21.0)
     "scikit-image", 
     "itk-elastix",
     "dipy",

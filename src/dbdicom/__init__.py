@@ -1,32 +1,33 @@
+# OLD API
 
-# from .create import (
-#     database,
-#     patient,
-#     study,
-#     series, 
-#     as_series,
-#     zeros,
-#     ones,
-#     empty_series,
-#     volume,
-#     write_volume,
-# )
-from .create import *
-from .record import (
+from dbdicom.create import (
+    database, 
+    patient,
+    study,
+    series, 
+    as_series,
+    zeros,
+    ones,
+    empty_series,
+)
+from dbdicom.record import (
     copy_to, 
     move_to, 
     group, 
     merge, 
 )
-from .types.series import (
+from dbdicom.types.series import (
     array
 )
-from .record import Record
-#from .types.database import 
-from .types.database import *
-from .types.patient import Patient
-from .types.study import Study
-from .types.series import Series
-from .utils import image
-from . import extensions
-from . import dro
+from dbdicom.record import Record
+from dbdicom.types.database import Database
+from dbdicom.types.patient import Patient
+from dbdicom.types.study import Study
+from dbdicom.types.series import Series
+from dbdicom.utils import image
+from dbdicom import extensions
+from dbdicom import dro
+
+# New API
+
+from dbdicom.api import *

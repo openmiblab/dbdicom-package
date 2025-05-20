@@ -1,6 +1,6 @@
 matplotlib
 nibabel
-numpy<=1.26.4
+numpy
 scipy
 imageio
 pandas

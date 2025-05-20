@@ -5,22 +5,22 @@ Maintains an index of all files on disk.
 import os
 import copy
 import timeit
+
 #from tkinter import N
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import nibabel as nib
 
 from dbdicom.message import StatusBar, Dialog
 import dbdicom.utils.files as filetools
 import dbdicom.utils.dcm4che as dcm4che
-import dbdicom.utils.image as dbimage
 import dbdicom.ds.dataset as dbdataset
-from dbdicom.ds.create import read_dataset, SOPClass, new_dataset
-from dbdicom.ds.dataset import DbDataset
+from dbdicom.ds.create import read_dataset, SOPClass
+import dbdicom.register
 
 class DatabaseCorrupted(Exception):
     pass
+
 
 
 
@@ -301,36 +301,7 @@ class Manager():
 
 
     def tree(self, depth=3):
-
-        df = self.register
-        if df is None:
-            raise ValueError('Cannot build tree - no database open')
-        df = df[df.removed == False]
-        df.sort_values(['PatientName','StudyDate','SeriesNumber','InstanceNumber'], inplace=True)
-        
-        database = {'uid': self.path}
-        database['patients'] = []
-        for uid_patient in df.PatientID.dropna().unique():
-            patient = {'uid': uid_patient}
-            database['patients'].append(patient)
-            if depth >= 1:
-                df_patient = df[df.PatientID == uid_patient]
-                patient['key'] = df_patient.index[0]
-                patient['studies'] = []
-                for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-                    study = {'uid': uid_study}
-                    patient['studies'].append(study)
-                    if depth >= 2:
-                        df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-                        study['key'] = df_study.index[0]
-                        study['series'] = []
-                        for uid_sery in df_study.SeriesInstanceUID.dropna().unique():
-                            series = {'uid': uid_sery}
-                            study['series'].append(series)
-                            if depth == 3:
-                                df_series = df_study[df_study.SeriesInstanceUID == uid_sery]
-                                series['key'] = df_series.index[0]
-        return database
+        return dbdicom.register.uid_tree(self.register, self.path, depth)
 
 
     def keys(self,
@@ -589,8 +560,11 @@ class Manager():
             return ds.get_values(attr)
 
 
-    def series_header(self, key):
+    def series_header(self, key=None, series_uid=None):
         """Attributes and values inherited from series, study and patient"""
+
+        if key is None:
+            key = self.keys(series=series_uid)[0]
 
         attr_patient = ['PatientID', 'PatientName']
         attr_study = ['StudyInstanceUID', 'StudyDescription', 'StudyDate']
@@ -623,8 +597,11 @@ class Manager():
         return attr, vals
 
 
-    def study_header(self, key):
+    def study_header(self, key=None, study_uid=None):
         """Attributes and values inherited from series, study and patient"""
+
+        if key is None:
+            key = self.keys(study=study_uid)[0]
 
         attr_patient = ['PatientID', 'PatientName']
         attr_study = ['StudyInstanceUID', 'StudyDescription', 'StudyDate']
@@ -941,6 +918,7 @@ class Manager():
 
         self._write_df()
         self.write()
+        return self
 
 
     def restore(self, rows=None):  
@@ -1182,7 +1160,10 @@ class Manager():
         data[11:] = ds.get_values(self.columns[11:])
         key = self.update_row_data(key, data)
         ds.set_values(self.columns[:11], data[:11]) 
-        self.dataset[key] = ds
+        #self.dataset[key] = ds
+        file = self.filepath(key)
+        if file is not None:
+            ds.write(file, self.status)
         return key
 
 
@@ -1916,49 +1897,6 @@ class Manager():
         self.save_dataset(key, ds)
         return key # added
     
-    # def force_get_dataset(self, key):
-    
-    #     # Get a dataset for the instance, and create one in memory if needed.
-    #     instance_uid = self.value(key, 'SOPInstanceUID')
-
-    #     # If the record is empty, create a new instance and a dataset in memory
-    #     if instance_uid is None: 
-    #         ds = new_dataset('MRImage')
-    #         new_key = self.create_new_instance(key, ds)
-    #         return ds, new_key
-        
-    #     # If a dataset exists, return it.
-    #     ds = self.get_dataset(instance_uid, [key])
-    #     if ds is not None:
-    #         return ds, key
-
-    #     # If the instance has no data yet, create a dataset in memory.
-    #     ds = new_dataset('MRImage')
-    #     new_key = self.set_instance_dataset(instance_uid, ds, key)
-    #     return ds, key
-
-    # def _set_values(self, attributes, values, keys=None, uid=None):
-    #     """Set values in a dataset"""
-    #     # PASSES ALL TESTS but creates datasets when attributes of empty records are set
-
-    #     uids = ['PatientID', 'StudyInstanceUID', 'SeriesInstanceUID', 'SOPInstanceUID']
-    #     uids = [i for i in uids if i in attributes]
-    #     if uids != []:
-    #         raise ValueError('UIDs cannot be set using set_value(). Use copy_to() or move_to() instead.')
-
-    #     if keys is None:
-    #         keys = self.keys(uid)
-
-    #     for key in keys:
-
-    #         # Get the dataset, and create one if needed
-    #         ds, new_key = self.force_get_dataset(key)
-
-    #         # Set the new values
-    #         self.set_dataset_values(ds, new_key, attributes, values)
-
-    #     return new_key
-    
 
     def set_row_values(self, key, attributes, values):
         if not isinstance(values, list):
@@ -2007,7 +1945,7 @@ class Manager():
                 return
 
         # Single attribute
-        if not isinstance(attributes, list):
+        if np.isscalar(attributes):
 
             if attributes in self.columns:
                 value = [self.register.at[key, attributes] for key in keys]
@@ -2095,6 +2033,8 @@ class Manager():
             ds.write(path)
 
 
+
+
     # Misleading name because files are not datasets - e.g. does not work for datasets in memory.
     def import_datasets(self, files):
 
@@ -2125,64 +2065,66 @@ class Manager():
 
         # return the UIDs of the new instances
         return df.SOPInstanceUID.values.tolist()
-
-
-    def import_datasets_from_nifti(self, files, study=None):
-
-        if study is None:
-            study, _ = self.new_study()
-
-        # Create new 
-        nifti_series = None
-        for i, file in enumerate(files):
-
-            # Read the nifti file
-            nim = nib.load(file)
-            sx, sy, sz = nim.header.get_zooms() # spacing
-            
-            # If a dicom header is stored, get it
-            # Else create one from scratch
-            try:
-                dcmext = nim.header.extensions
-                dataset = DbDataset(dcmext[0].get_content())
-            except:
-                dataset = new_dataset()
-
-            # Read the array and reshape to 3D 
-            array = np.squeeze(nim.get_fdata())
-            array.reshape((array.shape[0], array.shape[1], -1))
-            n_slices = array.shape[-1]
-
-            # If there is only one slice,
-            # load it into the nifti series.
-            if n_slices == 1:
-                if nifti_series is None:
-                    desc = os.path.basename(file)
-                    nifti_series, _ = self.new_series(study, SeriesDescription=desc)
-                affine = dbimage.affine_to_RAH(nim.affine)
-                dataset.set_pixel_array(array[:,:,0])
-                dataset.set_values('affine_matrix', affine)
-                #dataset.set_values('PixelSpacing', [sy, sx])
-                self.new_instance(nifti_series, dataset)
-
-            # If there are multiple slices in the file,
-            # Create a new series and save all files in there.
-            else:
-                desc = os.path.basename(file)
-                series, _ = self.new_series(study, SeriesDescription=desc)
-                affine = dbimage.affine_to_RAH(nim.affine)
-                for z in range(n_slices):
-                    ds = copy.deepcopy(dataset)
-                    ds.set_pixel_array(array[:,:,z])
-                    ds.set_values('affine_matrix', affine)
-                    #ds.set_values('PixelSpacing', [sy, sx])
-                    self.new_instance(series, ds)
+    
 
 
     def export_datasets(self, uids, database):
         
         files = self.filepaths(uids)
         database.import_datasets(files)
+
+
+    # def import_datasets_from_nifti(self, files, study=None):
+
+    #     if study is None:
+    #         study, _ = self.new_study()
+
+    #     # Create new 
+    #     nifti_series = None
+    #     for i, file in enumerate(files):
+
+    #         # Read the nifti file
+    #         nim = nib.load(file)
+    #         sx, sy, sz = nim.header.get_zooms() # spacing
+            
+    #         # If a dicom header is stored, get it
+    #         # Else create one from scratch
+    #         try:
+    #             dcmext = nim.header.extensions
+    #             dataset = DbDataset(dcmext[0].get_content())
+    #         except:
+    #             dataset = new_dataset()
+
+    #         # Read the array and reshape to 3D 
+    #         array = np.squeeze(nim.get_fdata())
+    #         array.reshape((array.shape[0], array.shape[1], -1))
+    #         n_slices = array.shape[-1]
+
+    #         # If there is only one slice,
+    #         # load it into the nifti series.
+    #         if n_slices == 1:
+    #             if nifti_series is None:
+    #                 desc = os.path.basename(file)
+    #                 nifti_series, _ = self.new_series(study, SeriesDescription=desc)
+    #             affine = dbimage.affine_to_RAH(nim.affine)
+    #             dataset.set_pixel_array(array[:,:,0])
+    #             dataset.set_values('affine_matrix', affine)
+    #             #dataset.set_values('PixelSpacing', [sy, sx])
+    #             self.new_instance(nifti_series, dataset)
+
+    #         # If there are multiple slices in the file,
+    #         # Create a new series and save all files in there.
+    #         else:
+    #             desc = os.path.basename(file)
+    #             series, _ = self.new_series(study, SeriesDescription=desc)
+    #             affine = dbimage.affine_to_RAH(nim.affine)
+    #             for z in range(n_slices):
+    #                 ds = copy.deepcopy(dataset)
+    #                 ds.set_pixel_array(array[:,:,z])
+    #                 ds.set_values('affine_matrix', affine)
+    #                 #ds.set_values('PixelSpacing', [sy, sx])
+    #                 self.new_instance(series, ds)
+
 
 
 #   Helper functions to hide the register from classes other than manager
@@ -2209,4 +2151,4 @@ class Manager():
 
     def _extract_record(self, name, uid):
         return self.register[name] == uid
-
+    
