@@ -25,8 +25,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[docs,extensions]
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r docs/requirements.txt
+          pip install .
+          pip list
 
       - name: Update Sphinx htmls
         run: |
