@@ -24,24 +24,20 @@ Install dbdicom from source:
 
 >>> pip install -e path\to\dbdicom
 
-Install requirements for extensions:
-
->>> pip install -r requirements-extensions.txt
-
 Install tests requirements:
 
-cd to dbdicom/tests
->>> pip install -r requirements.txt
+cd to dbdicom
+>>> pip install -r tests/requirements.txt
 
 Install docs requirements:
 
-cd to dbdicom/docs
->>> pip install -r requirements.txt
+cd to dbdicom
+>>> pip install -r docs/requirements.txt
 
 Install dev requirements:
 
-cd to dbdicom/dev
->>> pip install -r requirements.txt
+cd to dbdicom
+>>> pip install -r dev/requirements.txt
 
 To leave:
 >>> deactivate
