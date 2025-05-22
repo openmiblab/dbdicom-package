@@ -6,9 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 project = 'dbdicom'
-copyright = '2022-2025, QIB-Sheffield'
-author = 'QIB-Sheffield'
-release = '0.2.4'
+copyright = '2022-2025, miblab.org'
+author = 'miblab.org'
+release = '0.3.0'
 
 # -- Path setup --------------------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -64,7 +64,7 @@ sphinx_gallery_conf = {
 
     # Settings for use of binder
     "binder": {
-        "org": "QIB-Sheffield",
+        "org": "miblab",
         "repo": "dbdicom",
         "binderhub_url": "https://mybinder.org",
         "branch": "main",
@@ -90,11 +90,10 @@ exclude_patterns = []
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
-    'matplotlib': ('https://matplotlib.org/stable/', None),
+    # 'matplotlib': ('https://matplotlib.org/stable/', None),
     'pydicom': ('https://pydicom.github.io/pydicom/stable/', None),
-    'nibabel': ('https://nipy.org/nibabel/', None),
+#    'nibabel': ('https://nipy.org/nibabel/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
-    'skimage': ('https://scikit-image.org/docs/stable/', None),
 }
 
 # generate autosummary even if no references
@@ -113,12 +112,17 @@ remove_from_toctrees = ["_autosummary/*"]
 html_theme = 'pydata_sphinx_theme'
 
 html_theme_options = {
-    "github_url": "https://github.com/QIB-Sheffield/dbdicom",
+    "github_url": "https://github.com/openmiblab/dbdicom",
     "collapse_navigation": True,
     }
 
 # Add any paths that contain custom static files (such as style sheets) here, relative to this directory. They are copied after the builtin static files, so a file named "default.css" will overwrite the builtin "default.css"
 html_static_path = ['_static']
+
+# Add any CSS files placed in _static here so they can be found when building the documentation
+html_css_files = [
+    'teams.css', # templates for the teams mosaic in About
+]
 
 # The suffix(es) of source filenames.
 source_suffix = ['.rst', '.md']

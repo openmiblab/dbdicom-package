@@ -1,28 +1,8 @@
 import os
 import platform
 import zipfile
-import imageio
-import numpy as np
-
-from PIL import Image, ImageSequence
-import numpy as np
 
 
-def _load_gif_frames(image: Image, mode='RGBA'):
-    return np.array([
-        np.array(frame.convert(mode))
-        for frame in ImageSequence.Iterator(image)
-    ])
-
-def gif2numpy(file):
-    with Image.open(file) as im:
-        frames = _load_gif_frames(im)
-    # GIF files are in RGBA format but assume grescale for now
-    frames = frames[...,0] 
-    # Transpose in-plane x-y
-    frames = np.transpose(frames, (0,2,1))
-    return frames
-    #return imageio.imread(file)
 
 def all_files(path):
     files = [item.path for item in scan_tree(path) if item.is_file()]

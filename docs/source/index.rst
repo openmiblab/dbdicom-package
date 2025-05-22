@@ -3,30 +3,66 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-#####################
-dbdicom documentation
-#####################
+#########################
+**dbdicom** documentation
+#########################
 
-A Python interface for reading and writing DICOM databases.
-
-.. warning::
-
-   ``dbdicom`` is developed in public and currently being trialled in ongoing multi-centre clinical studies `iBEAt <https://bmcnephrol.biomedcentral.com/articles/10.1186/s12882-020-01901-x>`_ and `AFiRM <https://www.uhdb.nhs.uk/afirm-study/>`_. However, ``dbdicom`` is work in progress and **not yet sufficiently stable for wider use**. Current dissemination activities, such as on the `ISMRM (Toronto 2023) <https://www.ismrm.org/23m/>`_, are limited in scope and intended only to get early feedback from the community. 
+A python interface for reading and writing DICOM databases.
 
 
-Ambition
-^^^^^^^^
+***
+Aim
+***
 
-The DICOM format is the universally recognised standard for medical imaging, but working with DICOM data remains a challenging task for data scientists. 
+Simplify import and export of medical imaging data in DICOM format, 
+increase the transparancy of post-processing pipelines for medical 
+imaging biomarkers and improving standardization by avoiding the 
+need for multiple data formats.
 
-``dbdicom`` aims to provide an *intuitive* programming interface for reading and writing DICOM databases - replacing unfamiliar DICOM-native concepts by more pythonic language and syntax. 
+******
+Status
+******
 
+The *prototype release* of `dbdicom` is version 0.2 (lates 0.2.6). It 
+is stable and has been rolled out in image processing pipelines of 
+three ongoing studies, but is no longer supported and will be phased out.
+
+Version 0.3 is a major rewrite based on these experiences aiming to 
+simplify the code base and the API, and improve efficiency and 
+coverage of DICOM SOP classes. Version 0.3 is currently *work in 
+progress* and changes are not backwards compatible with version 0.2.
+
+The API reference shows version 0.3 functionality but the user guide 
+is for version 0.2. Updates are expected shortly.
+
+******
+Citing
+******
+
+When you use ``dbdicom``, please cite: 
+
+Steven Sourbron, Joao Almeida e Sousa, Alexander Daniel, 
+Charlotte Buchanan, Ebony Gunwhy, Eve Lennie, Kevin Teh, 
+Steve Shillitoe, David Morris, Andrew Priest, David Thomas, and 
+Susan Francis. dbdicom: an open-source python interface for reading 
+and writing DICOM databases. Proc Intl Soc Mag Reson Med 
+(Toronto, Canada), #3248, 2023.
+
+
+*******
+License
+*******
+
+``dbdicom`` is distributed under the 
+`Apache 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_ license - a 
+permissive, free license that allows users to use, modify, and 
+distribute the software without restrictions.
 
 .. toctree::
    :maxdepth: 2
+   :hidden:
    
    user_guide/index
    reference/index
-   generated/examples/index
-   developers_guide/index
+   releases/index
    about/index

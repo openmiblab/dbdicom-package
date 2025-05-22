@@ -1,11 +1,8 @@
-matplotlib
-nibabel
+tqdm
+importlib-resources
 numpy
-scipy
-imageio
 pandas
 pydicom
 python-gdcm
 pylibjpeg-libjpeg
-importlib-resources
 vreg

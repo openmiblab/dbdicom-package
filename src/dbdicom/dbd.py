@@ -5,17 +5,23 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import vreg
+from pydicom.dataset import Dataset
 
 import dbdicom.utils.arrays
 import dbdicom.utils.files as filetools
 import dbdicom.utils.dcm4che as dcm4che
-import dbdicom.ds.dataset as dbdataset
-from dbdicom.ds.create import read_dataset, new_dataset
+import dbdicom.dataset as dbdataset
 import dbdicom.register as register
+import dbdicom.const as const
 
 
 
 class DataBaseDicom():
+    """Class to read and write a DICOM folder.
+
+    Args:
+        path (str): path to the DICOM folder.
+    """
 
     def __init__(self, path):
 
@@ -36,6 +42,8 @@ class DataBaseDicom():
 
 
     def read(self):
+        """Read the DICOM folder again
+        """
 
         files = filetools.all_files(self.path)
         self.register = dbdataset.read_dataframe(
@@ -53,6 +61,10 @@ class DataBaseDicom():
     
 
     def close(self): 
+        """Close the DICOM folder
+        
+        This also saves changes in the header file to disk.
+        """
 
         created = self.register.created & (self.register.removed==False) 
         removed = self.register.removed
@@ -76,7 +88,8 @@ class DataBaseDicom():
         return self
     
 
-    def restore(self):  
+    def restore(self): 
+        """Restore the DICOM folder to the last saved state.""" 
 
         created = self.register.created 
         removed = self.register.removed & (self.register.created==False)
@@ -102,16 +115,54 @@ class DataBaseDicom():
 
 
     def summary(self):
+        """Return a summary of the contents of the database.
+
+        Returns:
+            dict: Nested dictionary with summary information on the database.
+        """
         return register.summary(self.register)
     
     def print(self):
+        """Print the contents of the DICOM folder
+        """
         register.print_tree(self.register)
         return self
     
     def patients(self, name=None, contains=None, isin=None):
+        """Return a list of patients in the DICOM folder.
+
+        Args:
+            name (str, optional): value of PatientName, to search for 
+                individuals with a given name. Defaults to None.
+            contains (str, optional): substring of PatientName, to 
+                search for individuals based on part of their name. 
+                Defaults to None.
+            isin (list, optional): List of PatientName values, to search 
+                for patients whose name is in the list. Defaults to None.
+
+        Returns:
+            list: list of patients fulfilling the criteria.
+        """
         return register.patients(self.register, self.path, name, contains, isin)
     
     def studies(self, entity=None, name=None, contains=None, isin=None):
+        """Return a list of studies in the DICOM folder.
+
+        Args:
+            entity (str or list): path to a DICOM folder (to search in 
+                the whole folder), or a two-element list identifying a 
+                patient (to search studies of a given patient).
+            name (str, optional): value of StudyDescription, to search for 
+                studies with a given description. Defaults to None.
+            contains (str, optional): substring of StudyDescription, to 
+                search for studies based on part of their description. 
+                Defaults to None.
+            isin (list, optional): List of StudyDescription values, to search 
+                for studies whose description is in a list. Defaults to None.
+
+        Returns:
+            list: list of studies fulfilling the criteria.
+        """
         if entity == None:
             entity = self.path
         if isinstance(entity, str):
@@ -123,6 +174,24 @@ class DataBaseDicom():
             return register.studies(self.register, entity, name, contains, isin)
     
     def series(self, entity=None, name=None, contains=None, isin=None):
+        """Return a list of series in the DICOM folder.
+
+        Args:
+            entity (str or list): path to a DICOM folder (to search in 
+                the whole folder), or a list identifying a 
+                patient or a study (to search series of a given patient 
+                or study).
+            name (str, optional): value of SeriesDescription, to search for 
+                series with a given description. Defaults to None.
+            contains (str, optional): substring of SeriesDescription, to 
+                search for series based on part of their description. 
+                Defaults to None.
+            isin (list, optional): List of SeriesDescription values, to search 
+                for series whose description is in a list. Defaults to None.
+
+        Returns:
+            list: list of series fulfilling the criteria.
+        """
         if entity == None:
             entity = self.path
         if isinstance(entity, str):
@@ -140,6 +209,19 @@ class DataBaseDicom():
 
 
     def volume(self, series:list, dims:list=None, multislice=False) -> vreg.Volume3D:
+        """Read a vreg.Volume3D from a DICOM series
+
+        Args:
+            series (list): DICOM series to read
+            dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
+            multislice (bool, optional): Whether the data are to be read 
+                as multislice or not. In multislice data the voxel size 
+                is taken from the slice gap rather thsan the slice thickness. Defaults to False.
+
+        Returns:
+            vreg.Volume3D: vole read from the series.
+        """
+
         if dims is None:
             dims = []
         elif isinstance(dims, str):
@@ -154,9 +236,9 @@ class DataBaseDicom():
         values = []
         volumes = []
         for f in tqdm(files, desc='Reading volume..'):
-            ds = read_dataset(f)  
-            values.append(ds.get_values(dims))
-            volumes.append(ds.volume(multislice))
+            ds = dbdataset.read_dataset(f)  
+            values.append(dbdataset.get_values(ds, dims))
+            volumes.append(dbdataset.volume(ds, multislice))
 
         # Format as mesh
         coords = np.stack(values, axis=-1)
@@ -187,15 +269,25 @@ class DataBaseDicom():
             self, vol:vreg.Volume3D, series:list, 
             ref:list=None, multislice=False,
         ):
+        """Write a vreg.Volume3D to a DICOM series
+
+        Args:
+            vol (vreg.Volume3D): Volume to write to the series.
+            series (list): DICOM series to read
+            dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
+            multislice (bool, optional): Whether the data are to be read 
+                as multislice or not. In multislice data the voxel size 
+                is taken from the slice gap rather thsan the slice thickness. Defaults to False.
+        """
         if ref is None:
-            ds = new_dataset('MRImage')
+            ds = dbdataset.new_dataset('MRImage')
         else:
             if ref[0] == series[0]:
                 ref_mgr = self
             else:
                 ref_mgr = DataBaseDicom(ref[0])
             files = register.files(ref_mgr.register, ref)
-            ds = read_dataset(files[0]) 
+            ds = dbdataset.read_dataset(files[0]) 
 
         # Get the attributes of the destination series
         attr = self._attributes(series)
@@ -205,15 +297,15 @@ class DataBaseDicom():
         if vol.ndim==3:
             slices = vol.split()
             for i, sl in tqdm(enumerate(slices), desc='Writing volume..'):
-                ds.set_volume(sl, multislice)
+                dbdataset.set_volume(ds, sl, multislice)
                 self._write_dataset(ds, attr, n + 1 + i, new_instances)
         else:
             i=0
             vols = vol.separate().reshape(-1)
             for vt in tqdm(vols, desc='Writing volume..'):
                 for sl in vt.split():
-                    ds.set_volume(sl, multislice)
-                    ds.set_value(sl.dims, sl.coords[:,...])
+                    dbdataset.set_volume(ds, sl, multislice)
+                    dbdataset.set_value(ds, sl.dims, sl.coords[:,...])
                     self._write_dataset(ds, attr, n + 1 + i, new_instances)
                     i+=1
             return self
@@ -221,16 +313,52 @@ class DataBaseDicom():
 
 
     def to_nifti(self, series:list, file:str, dims=None, multislice=False):
+        """Save a DICOM series in nifti format.
+
+        Args:
+            series (list): DICOM series to read
+            file (str): file path of the nifti file.
+            dims (list, optional): Non-spatial dimensions of the volume. 
+                Defaults to None.
+            multislice (bool, optional): Whether the data are to be read 
+                as multislice or not. In multislice data the voxel size 
+                is taken from the slice gap rather thaan the slice thickness. Defaults to False.
+        """
         vol = self.volume(series, dims, multislice)
         vreg.write_nifti(vol, file)
         return self
 
     def from_nifti(self, file:str, series:list, ref:list=None, multislice=False):
+        """Create a DICOM series from a nifti file.
+
+        Args:
+            file (str): file path of the nifti file.
+            series (list): DICOM series to create
+            ref (list): DICOM series to use as template.
+            multislice (bool, optional): Whether the data are to be written
+                as multislice or not. In multislice data the voxel size 
+                is written in the slice gap rather thaan the slice thickness. Defaults to False.
+        """
         vol = vreg.read_nifti(file)
         self.write_volume(vol, series, ref, multislice)
         return self
     
     def pixel_data(self, series:list, dims:list=None, include=None) -> np.ndarray:
+        """Read the pixel data from a DICOM series
+
+        Args:
+            series (list): DICOM series to read
+            dims (list, optional): Dimensions of the array.
+            include (list, optional): list of DICOM attributes that are 
+                read on the fly to avoid reading the data twice.
+
+        Returns:
+            tuple: numpy array with pixel values and an array with 
+                coordinates of the slices according to dims. If include 
+                is provide these are returned as a dictionary in a third 
+                return value.
+        """
+
         if np.isscalar(dims):
             dims = [dims]
         else:
@@ -251,20 +379,20 @@ class DataBaseDicom():
         arrays = np.empty(len(files), dtype=dict)
         if include is not None:
             values = np.empty(len(files), dtype=dict)
-        for i, f in tqdm(enumerate(files), desc='Reading pixel_values..'):
-            ds = read_dataset(f)  
-            coords.append(ds.get_values(dims))
+        for i, f in tqdm(enumerate(files), desc='Reading pixel data..'):
+            ds = dbdataset.read_dataset(f)  
+            coords.append(dbdataset.get_values(ds, dims))
             # save as dict so numpy does not stack as arrays
-            arrays[i] = {'pixel_values': ds.get_values('pixel_values')}
+            arrays[i] = {'pixel_data': dbdataset.pixel_data(ds)}
             if include is not None:
-                values[i] = {'values': ds.get_values(params)}
+                values[i] = {'values': dbdataset.get_values(ds, params)}
 
         # Format as mesh
         coords = np.stack([v for v in coords], axis=-1)
         coords, inds = dbdicom.utils.arrays.meshvals(coords)
 
         arrays = arrays[inds].reshape(coords.shape[1:])
-        arrays = np.stack([a['pixel_values'] for a in arrays.reshape(-1)], axis=-1)
+        arrays = np.stack([a['pixel_data'] for a in arrays.reshape(-1)], axis=-1)
         arrays = arrays.reshape(arrays.shape[:2] + coords.shape[1:])
 
         if include is None:
@@ -278,6 +406,15 @@ class DataBaseDicom():
     
     
     def unique(self, pars:list, entity:list) -> dict:
+        """Return a list of unique values for a DICOM entity
+
+        Args:
+            pars (list): attributes to return.
+            entity (list): DICOM entity to search (Patient, Study or Series)
+
+        Returns:
+            dict: dictionary with unique values for each attribute.
+        """
         v = self._values(pars, entity)
 
         # Return a list with unique values for each attribute
@@ -302,6 +439,12 @@ class DataBaseDicom():
         return {p: values[i] for i, p in enumerate(pars)} 
     
     def copy(self, from_entity, to_entity):
+        """Copy a DICOM  entity (patient, study or series)
+
+        Args:
+            from_entity (list): entity to copy
+            to_entity (list): entity after copying.
+        """
         if len(from_entity) == 4:
             if len(to_entity) != 4:
                 raise ValueError(
@@ -328,11 +471,21 @@ class DataBaseDicom():
         )
     
     def delete(self, entity):
+        """Delete a DICOM entity from the database
+
+        Args:
+            entity (list): entity to delete
+        """
         index = register.index(self.register, entity)
         self.register.loc[index,'removed'] = True
         return self
 
     def move(self, from_entity, to_entity):
+        """Move a DICOM entity
+
+        Args:
+            entity (list): entity to move
+        """
         self.copy(from_entity, to_entity)
         self.delete(from_entity)
         return self
@@ -346,8 +499,8 @@ class DataBaseDicom():
             files = register.files(self.register, entity)
             v = np.empty((len(files), len(attributes)), dtype=object)
             for i, f in enumerate(files):
-                ds = read_dataset(f)
-                v[i,:] = ds.get_values(attributes)
+                ds = dbdataset.read_dataset(f)
+                v[i,:] = dbdataset.get_values(ds, attributes)
         return v
 
     def _copy_patient(self, from_patient, to_patient):
@@ -394,7 +547,7 @@ class DataBaseDicom():
         new_instances = {}
         for i, f in tqdm(enumerate(files), total=len(files), desc=f'Copying series {to_series[1:]}'):
             # Read dataset and assign new properties
-            ds = read_dataset(f)
+            ds = dbdataset.read_dataset(f)
             self._write_dataset(ds, attr, n + 1 + i, new_instances)
         self._update_register(new_instances)
 
@@ -429,9 +582,9 @@ class DataBaseDicom():
         try:
             # If the patient exists and has files, read from file
             files = register.files(self.register, patient)
-            attr = dbdataset.module_patient()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = const.PATIENT_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the patient does not exist, generate values
             attr = ['PatientID', 'PatientName']
@@ -446,9 +599,9 @@ class DataBaseDicom():
         try:
             # If the study exists and has files, read from file
             files = register.files(self.register, study)
-            attr = dbdataset.module_study()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = const.STUDY_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the study does not exist, generate values
             attr = ['StudyInstanceUID', 'StudyDescription', 'StudyDate']
@@ -464,9 +617,9 @@ class DataBaseDicom():
         try:
             # If the series exists and has files, read from file
             files = register.files(self.register, series)
-            attr = dbdataset.module_series()
-            ds = read_dataset(files[0])
-            vals = ds.get_values(attr)
+            attr = const.SERIES_MODULE
+            ds = dbdataset.read_dataset(files[0])
+            vals = dbdataset.get_values(ds, attr)
         except:
             # If the series does not exist or is empty, generate values
             try:
@@ -482,16 +635,16 @@ class DataBaseDicom():
         return study_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
         
-    def _write_dataset(self, ds:dbdataset.DbDataset, attr:dict, instance_nr:int, register:dict):
+    def _write_dataset(self, ds:Dataset, attr:dict, instance_nr:int, register:dict):
         # Set new attributes 
         attr['SOPInstanceUID'] = dbdataset.new_uid()
         attr['InstanceNumber'] = instance_nr
-        ds.set_values(list(attr.keys()), list(attr.values()))
+        dbdataset.set_values(ds, list(attr.keys()), list(attr.values()))
         # Save results in a new file
         rel_path = os.path.join('dbdicom', dbdataset.new_uid() + '.dcm') 
-        ds.write(os.path.join(self.path, rel_path))
+        dbdataset.write(ds, os.path.join(self.path, rel_path))
         # Add a row to the register
-        register[rel_path] = ds.get_values(self.register.columns)
+        register[rel_path] = dbdataset.get_values(ds, self.register.columns)
 
 
     def _update_register(self, new_instances:dict):

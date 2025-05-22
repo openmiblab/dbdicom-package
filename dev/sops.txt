@@ -9,7 +9,7 @@ Clone dbdicom package locally
 cd to dbdicom top folder
 
 On windows:
->>> py -3 -m venv .venv           # create virtual environment
+>>> python -m venv .venv           # create virtual environment
 >>> .venv/Scripts/activate        # activate virtual environment
 
 Then select the Python interpreter in the .venv folder. In VSCode:
