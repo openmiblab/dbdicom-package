@@ -1,12 +1,10 @@
 matplotlib
-nibabel
 numpy
 pandas
 pydicom
 python-gdcm
 pylibjpeg-libjpeg
 importlib-resources
-scipy
 scikit-image<=0.19.0
 SimpleITK-SimpleElastix
 dipy
