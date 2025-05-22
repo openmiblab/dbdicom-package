@@ -1,4 +1,6 @@
-
+**********************************
+Creating and modifying DICOM files
+**********************************
 
 Reading DICOM attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^

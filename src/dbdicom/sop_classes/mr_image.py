@@ -68,7 +68,7 @@ def set_pixel_data(ds, array):
 def chat_gpt_3d(num_frames=10, rows=256, columns=256):
 
     # File meta info
-    file_meta = pydicom.dataset.FileMetaDataset()
+    file_meta = FileMetaDataset()
     file_meta.MediaStorageSOPClassUID = MRImageStorage
     file_meta.MediaStorageSOPInstanceUID = generate_uid()
     file_meta.ImplementationClassUID = generate_uid()

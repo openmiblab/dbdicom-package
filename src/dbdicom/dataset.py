@@ -19,11 +19,13 @@ from dbdicom.sop_classes import (
     mr_image,
     enhanced_mr_image,
     ultrasound_multiframe_image,
+    parametric_map,
+    segmentation,
 )
 
 
 # This ensures that dates and times are read as TM, DT and DA classes
-pydicom.config.datetime_conversion= True
+pydicom.config.datetime_conversion = True
 
 
 SOPCLASS = {
@@ -32,6 +34,8 @@ SOPCLASS = {
     '1.2.840.10008.5.1.4.1.1.2': 'CTImage',
     '1.2.840.10008.5.1.4.1.1.12.2': 'XrayAngiographicImage',
     '1.2.840.10008.5.1.4.1.1.3.1': 'UltrasoundMultiFrameImage',
+    '1.2.840.10008.5.1.4.1.1.30': 'ParametricMap',
+    '1.2.840.10008.5.1.4.1.1.66.4': 'Segmentation',
 }
 SOPCLASSMODULE = {
     '1.2.840.10008.5.1.4.1.1.4': mr_image,
@@ -39,6 +43,8 @@ SOPCLASSMODULE = {
     '1.2.840.10008.5.1.4.1.1.2': ct_image,
     '1.2.840.10008.5.1.4.1.1.12.2': xray_angiographic_image,
     '1.2.840.10008.5.1.4.1.1.3.1': ultrasound_multiframe_image,
+    '1.2.840.10008.5.1.4.1.1.30': parametric_map,
+    '1.2.840.10008.5.1.4.1.1.66.4': segmentation,
 }
 
 
@@ -65,8 +71,11 @@ def new_dataset(sop_class):
         return xray_angiographic_image.default()
     if sop_class == 'UltrasoundMultiFrameImage':
         return ultrasound_multiframe_image.default()
-    
-    return Dataset()
+    else:
+        raise ValueError(
+            f"DICOM class {sop_class} is not currently supported"
+        )
+
 
 
 def get_values(ds, tags):
@@ -562,7 +571,12 @@ def set_affine(ds, affine, multislice=False):
 
 def pixel_data(ds):
 
-    mod = SOPCLASSMODULE[ds.SOPClassUID]
+    try:
+        mod = SOPCLASSMODULE[ds.SOPClassUID]
+    except KeyError:
+        raise ValueError(
+            f"DICOM class {ds.SOPClassUID} is not currently supported."
+        )
     if hasattr(mod, 'pixel_data'):
         return getattr(mod, 'pixel_data')(ds)
     
@@ -582,7 +596,12 @@ def set_pixel_data(ds, array, value_range=None):
     if array is None:
         raise ValueError('The pixel array cannot be set to an empty value.')
     
-    mod = SOPCLASSMODULE[ds.SOPClassUID]
+    try:
+        mod = SOPCLASSMODULE[ds.SOPClassUID]
+    except KeyError:
+        raise ValueError(
+            f"DICOM class {ds.SOPClassUID} is not currently supported."
+        )
     if hasattr(mod, 'set_pixel_data'):
         return getattr(mod, 'set_pixel_data')(ds, array)
     

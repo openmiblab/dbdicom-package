@@ -1,3 +1,7 @@
+***********************
+Browsing a DICOM folder
+***********************
+
 
 Reading and opening a DICOM database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

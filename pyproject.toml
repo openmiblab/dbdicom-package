@@ -12,8 +12,8 @@ dependencies = [
     "tqdm",
     "importlib-resources",
     "numpy",
-    "pandas",
-    'vreg',
+    "pandas", # make obsolete
+    'vreg', 
     "pydicom", 
     "python-gdcm",
     "pylibjpeg-libjpeg",

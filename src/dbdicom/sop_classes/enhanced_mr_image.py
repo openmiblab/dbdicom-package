@@ -20,7 +20,7 @@ from dbdicom.utils import image
 
 import numpy as np
 import pydicom
-from pydicom.dataset import Dataset, FileDataset
+from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.sequence import Sequence
 from pydicom.uid import ExplicitVRLittleEndian, EnhancedMRImageStorage, generate_uid
 from datetime import datetime, timedelta
@@ -33,7 +33,7 @@ def create_5d_enhanced_mr_dataset(
     now = datetime.now()
 
     # File Meta Info
-    file_meta = pydicom.dataset.FileMetaDataset()
+    file_meta = FileMetaDataset()
     file_meta.MediaStorageSOPClassUID = EnhancedMRImageStorage
     file_meta.MediaStorageSOPInstanceUID = generate_uid()
     file_meta.ImplementationClassUID = generate_uid()

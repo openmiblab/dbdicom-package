@@ -1,6 +1,6 @@
 import numpy as np
 import pydicom
-from pydicom.dataset import Dataset, FileDataset
+from pydicom.dataset import Dataset, FileDataset, FileMetaDataset
 from pydicom.uid import SecondaryCaptureImageStorage, generate_uid, ExplicitVRLittleEndian
 from datetime import datetime
 from pydicom.sequence import Sequence
@@ -11,7 +11,7 @@ def create_3d_secondary_capture_dataset_with_dimensions(depth=16, rows=256, cols
     now = datetime.now()
 
     # File Meta
-    file_meta = pydicom.dataset.FileMetaDataset()
+    file_meta = FileMetaDataset()
     file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
     file_meta.MediaStorageSOPInstanceUID = generate_uid()
     file_meta.ImplementationClassUID = generate_uid()
