@@ -343,26 +343,38 @@ class DataBaseDicom():
         self.write_volume(vol, series, ref, multislice)
         return self
     
-    def pixel_data(self, series:list, dims:list=None, include=None) -> np.ndarray:
+    def pixel_data(self, series:list, dims:list=None, coords=False, include=None) -> np.ndarray:
         """Read the pixel data from a DICOM series
 
         Args:
             series (list): DICOM series to read
             dims (list, optional): Dimensions of the array.
+            coords (bool): If set to Trye, the coordinates of the 
+                arrays are returned alongside the pixel data
             include (list, optional): list of DICOM attributes that are 
                 read on the fly to avoid reading the data twice.
 
         Returns:
-            tuple: numpy array with pixel values and an array with 
+            numpy.ndarray or tuple: numpy array with pixel values, with 
+                at least 3 dimensions (x,y,z). If 
+                coords is set these are returned too as an array with 
                 coordinates of the slices according to dims. If include 
-                is provide these are returned as a dictionary in a third 
+                is provide the values are returned as a dictionary in the last 
                 return value.
         """
+        if coords:
+            if dims is None:
+                raise ValueError(
+                    "Coordinates can only be returned if dimensions are specified."
+                )
 
-        if np.isscalar(dims):
+        if dims is None:
+            dims = []
+        elif np.isscalar(dims):
             dims = [dims]
         else:
             dims = list(dims)
+        dims = ['SliceLocation'] + dims
 
         # Ensure return_vals is a list
         if include is None:
@@ -375,34 +387,40 @@ class DataBaseDicom():
         files = register.files(self.register, series)
         
         # Read dicom files
-        coords = []
+        coords_array = []
         arrays = np.empty(len(files), dtype=dict)
         if include is not None:
             values = np.empty(len(files), dtype=dict)
         for i, f in tqdm(enumerate(files), desc='Reading pixel data..'):
             ds = dbdataset.read_dataset(f)  
-            coords.append(dbdataset.get_values(ds, dims))
+            coords_array.append(dbdataset.get_values(ds, dims))
             # save as dict so numpy does not stack as arrays
             arrays[i] = {'pixel_data': dbdataset.pixel_data(ds)}
             if include is not None:
                 values[i] = {'values': dbdataset.get_values(ds, params)}
 
         # Format as mesh
-        coords = np.stack([v for v in coords], axis=-1)
-        coords, inds = dbdicom.utils.arrays.meshvals(coords)
+        coords_array = np.stack([v for v in coords_array], axis=-1)
+        coords_array, inds = dbdicom.utils.arrays.meshvals(coords_array)
 
-        arrays = arrays[inds].reshape(coords.shape[1:])
+        arrays = arrays[inds].reshape(coords_array.shape[1:])
         arrays = np.stack([a['pixel_data'] for a in arrays.reshape(-1)], axis=-1)
-        arrays = arrays.reshape(arrays.shape[:2] + coords.shape[1:])
+        arrays = arrays.reshape(arrays.shape[:2] + coords_array.shape[1:])
 
         if include is None:
-            return arrays, coords
+            if coords:
+                return arrays, coords_array[1:,...]
+            else:
+                return arrays
         
-        values = values[inds].reshape(coords.shape[1:])
+        values = values[inds].reshape(coords_array.shape[1:])
         values = np.stack([a['values'] for a in values.reshape(-1)], axis=-1)
-        values = values.reshape((len(params), ) + coords.shape[1:])
+        values = values.reshape((len(params), ) + coords_array.shape[1:])
 
-        return arrays, coords, values
+        if coords:
+            return arrays, coords_array[1:,...], values
+        else:
+            return arrays, values
     
     
     def unique(self, pars:list, entity:list) -> dict:
@@ -695,8 +713,7 @@ class DataBaseDicom():
         """
         # For each series, check if there are multiple
         # SOP Classes in the series and split them if yes.
-        all_series = self.series()
-        for series in tqdm(all_series, desc='Splitting series with multiple SOP Classes.'):
+        for series in self.series():
             series_index = register.index(self.register, series)
             df_series = self.register.loc[series_index]
             sop_classes = df_series.SOPClassUID.unique()
@@ -704,7 +721,7 @@ class DataBaseDicom():
                 # For each sop_class, create a new series and move all
                 # instances of that sop_class to the new series
                 desc = series[-1] if isinstance(series, str) else series[0]
-                for i, sop_class in enumerate(sop_classes[1:]):
+                for i, sop_class in tqdm(enumerate(sop_classes[1:]), desc='Splitting series with multiple SOP Classes.'):
                     df_sop_class = df_series[df_series.SOPClassUID == sop_class]
                     relpaths = df_sop_class.index.tolist()
                     sop_class_files = [os.path.join(self.path, p) for p in relpaths]

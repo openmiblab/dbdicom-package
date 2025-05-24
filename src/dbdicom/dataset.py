@@ -1,3 +1,6 @@
+# Test data
+# https://www.aliza-dicom-viewer.com/download/datasets
+
 import os
 from datetime import datetime
 import struct
@@ -712,41 +715,7 @@ def set_signal_type(ds, value):
 
 
 
+if __name__=='__main__':
 
-# def _initialize(ds, UID=None, ref=None): # ds is pydicom dataset
-
-#     # Date and Time of Creation
-#     dt = datetime.now()
-#     timeStr = dt.strftime('%H%M%S')  # long format with micro seconds
-
-#     ds.ContentDate = dt.strftime('%Y%m%d')
-#     ds.ContentTime = timeStr
-#     ds.AcquisitionDate = dt.strftime('%Y%m%d')
-#     ds.AcquisitionTime = timeStr
-#     ds.SeriesDate = dt.strftime('%Y%m%d')
-#     ds.SeriesTime = timeStr
-#     ds.InstanceCreationDate = dt.strftime('%Y%m%d')
-#     ds.InstanceCreationTime = timeStr
-
-#     if UID is not None:
-
-#         # overwrite UIDs
-#         ds.PatientID = UID[0]
-#         ds.StudyInstanceUID = UID[1]
-#         ds.SeriesInstanceUID = UID[2]
-#         ds.SOPInstanceUID = UID[3]
-
-#     if ref is not None: 
-
-#         # Series, Instance and Class for Reference
-#         refd_instance = Dataset()
-#         refd_instance.ReferencedSOPClassUID = ref.SOPClassUID
-#         refd_instance.ReferencedSOPInstanceUID = ref.SOPInstanceUID
-
-#         refd_series = Dataset()
-#         refd_series.ReferencedInstanceSequence = Sequence([refd_instance])
-#         refd_series.SeriesInstanceUID = ds.SeriesInstanceUID
-
-#         ds.ReferencedSeriesSequence = Sequence([refd_series])
-
-#     return ds
+    pass
+    #codify('C:\\Users\\md1spsx\\Documents\\f32bit.dcm', 'C:\\Users\\md1spsx\\Documents\\f32bit.py')

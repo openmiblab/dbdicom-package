@@ -6,6 +6,9 @@ from pydicom.uid import generate_uid, ParametricMapStorage
 from datetime import datetime
 
 
+def from_volume(vol):
+    pass
+
 
 def create_parametric_map(rows=64, cols=64, frames=1):
     # Create dummy pixel data (floating point)
@@ -57,7 +60,7 @@ def create_parametric_map(rows=64, cols=64, frames=1):
     ds.HighBit = 31
     ds.PixelRepresentation = 1  # 1 = signed, 0 = unsigned
     ds.FloatPixelData = pixel_array.astype(np.float32).tobytes()
-    ds.PixelData = b''  # Actual data goes in FloatPixelData
+    ds.PixelData = b"\0" * rows * cols * frames  # Actual data goes in FloatPixelData
 
     # Functional Group Sequences (minimal dummy values)
     ds.SharedFunctionalGroupsSequence = [Dataset()]

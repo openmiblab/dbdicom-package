@@ -8,7 +8,7 @@
 project = 'dbdicom'
 copyright = '2022-2025, miblab.org'
 author = 'miblab.org'
-release = '0.3.0'
+release = '0.3.1'
 
 # -- Path setup --------------------------------------------------------------
 # If extensions (or modules to document with autodoc) are in another directory,
