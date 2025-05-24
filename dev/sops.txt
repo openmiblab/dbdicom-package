@@ -104,7 +104,7 @@ Building release notes
 - Save the token in the environment variable GH_TOKEN. On windows:
 >>> $env:GH_TOKEN='token'
 - Build the changelog from current version to current dev. For instance:
->>> changelist QIB-Sheffield/mdreg v0.4.0 development --format rst
+>>> changelist openmiblab/dbdicom v0.3.0 development --format rst
 - Copy-paste the terminal output in an .rst file and save it in docs/source/releases
 - Edit the content of the file manually as needed
 - Add an entry in the index of docs/source/releases
