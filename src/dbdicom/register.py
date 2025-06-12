@@ -1,120 +1,173 @@
 import os
-import pandas as pd
 
 
-COLUMNS = [   
-    # Identifiers (unique)
-    'PatientID', 
-    'StudyInstanceUID', 
-    'SeriesInstanceUID', 
-    'SOPInstanceUID', 
-    # Human-readable identifiers (not unique)
-    'PatientName', 
-    'StudyDescription', 
-    'StudyDate', 
-    'SeriesDescription', 
-    'SeriesNumber', 
-    'InstanceNumber', 
-]
+def add_instance(dbtree:list, instance, rel_path):
+    
+    # Get patient and create if needed
+    pts = [pt for pt in dbtree if pt['PatientID']==instance['PatientID']]
+    if pts==[]:
+        pt = {
+            'PatientName': instance['PatientName'],
+            'PatientID': instance['PatientID'],
+            'studies': [],
+        }
+        dbtree.append(pt)
+    else:
+        pt = pts[0]
+    
+    # Get study and create if needed
+    sts = [st for st in pt['studies'] if st['StudyInstanceUID']==instance['StudyInstanceUID']]
+    if sts==[]:
+        st = {
+            'StudyDescription': instance['StudyDescription'],
+            'StudyDate': instance['StudyDate'],
+            'StudyInstanceUID': instance['StudyInstanceUID'],
+            'series': [],
+        }
+        pt['studies'].append(st)
+    else:
+        st = sts[0]
+
+    # Get series and create if needed
+    srs = [sr for sr in st['series'] if sr['SeriesInstanceUID']==instance['SeriesInstanceUID']]
+    if srs==[]:
+        sr = {
+            'SeriesNumber': instance['SeriesNumber'],
+            'SeriesDescription': instance['SeriesDescription'],
+            'SeriesInstanceUID': instance['SeriesInstanceUID'],
+            'instances': {},
+        }
+        st['series'].append(sr)
+    else:
+        sr = srs[0]
+
+    # Add instance
+    sr['instances'][instance['InstanceNumber']] = rel_path
+
+    return dbtree
 
 
-def index(df:pd.DataFrame, entity):
-    if isinstance(entity, str):
-        rows = (df.removed==False)
-    elif len(entity)==2:
-        patient_id = uid(df, entity)
-        rows = (df.PatientID==patient_id) & (df.removed==False)
-    elif len(entity)==3:
-        study_uid = uid(df, entity)
-        rows = (df.StudyInstanceUID==study_uid) & (df.removed==False)
-    elif len(entity)==4:
-        series_uid = uid(df, entity)
-        rows = (df.SeriesInstanceUID==series_uid) & (df.removed==False)
-    return df.index[rows].tolist()
-
-
-def files(df:pd.DataFrame, entity):
+def files(dbtree, entity):
     # Raises an error if the entity does not exist or has no files
-    df.sort_values(['PatientID', 'StudyInstanceUID', 'SeriesNumber', 'InstanceNumber'], inplace=True)
-    relpath = index(df, entity)
+    relpath = index(dbtree, entity)
     if relpath==[]:
         raise ValueError(f'No files in entity {entity}')
     if isinstance(entity, str):
         return [os.path.join(entity, f) for f in relpath]
     else:
         return [os.path.join(entity[0], f) for f in relpath]
+    
+
+def index(dbtree, entity):
+    if isinstance(entity, str):
+        idx = []
+        for pt in dbtree:
+            for st in pt['studies']:
+                for sr in st['series']:
+                    idx += list(sr['instances'].values())
+        return idx
+    elif len(entity)==2:
+        patient_id = uid(dbtree, entity)
+        idx = []
+        for pt in dbtree:
+            if pt['PatientID'] == patient_id:
+                for st in pt['studies']:
+                    for sr in st['series']:
+                        idx += list(sr['instances'].values())
+                return idx
+    elif len(entity)==3:
+        study_uid = uid(dbtree, entity)
+        idx = []
+        for pt in dbtree:
+            for st in pt['studies']:
+                if st['StudyInstanceUID'] == study_uid:
+                    for sr in st['series']:
+                        idx += list(sr['instances'].values())
+                    return idx
+    elif len(entity)==4:
+        series_uid = uid(dbtree, entity)
+        for pt in dbtree:
+            for st in pt['studies']:
+                for sr in st['series']:
+                    if sr['SeriesInstanceUID'] == series_uid:
+                        return list(sr['instances'].values())
+                    
+
+def drop(dbtree, relpaths):
+    for pt in dbtree[:]:
+        for st in pt['studies'][:]:
+            for sr in st['series'][:]:
+                for nr, relpath in list(sr['instances'].items()):
+                    if relpath in relpaths:
+                        del sr['instances'][nr]
+                if sr['instances'] == []:
+                    st['series'].remove(sr)
+            if st['series'] == []:
+                pt['studies'].remove(st)
+    return dbtree
 
 
-def _prep(df:pd.DataFrame):
-    df = df[df.removed == False]
-    df.sort_values(['PatientID','StudyInstanceUID','SeriesNumber'], inplace=True)
-    return df
-
-
-def entity(df, path, uid):# information entity from uid
-    df = _prep(df)
-
-    patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
-        if patient_name in patient_idx:
-            patient_idx[patient_name] += 1
-        else:
-            patient_idx[patient_name] = 0
-        patient_desc = (patient_name, patient_idx[patient_name])
-        if uid == uid_patient:
-            return [path, patient_desc]
+# def entity(df, path, uid):# information entity from uid
+#     dbtree = tree(df)
+#     patient_idx = {}
+#     for pt in dbtree:
+#         patient_name = pt['PatientName']
+#         uid_patient = pt['PatientID']
+#         if patient_name in patient_idx:
+#             patient_idx[patient_name] += 1
+#         else:
+#             patient_idx[patient_name] = 0
+#         patient_desc = (patient_name, patient_idx[patient_name])
+#         if uid == uid_patient:
+#             return [path, patient_desc]
         
-        else:
+#         else:
 
-            study_idx = {}
-            for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-                df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-                study_name = df_study.StudyDescription.values[0]
-                if study_name in study_idx:
-                    study_idx[study_name] += 1
-                else:
-                    study_idx[study_name] = 0
-                study_desc = (study_name, study_idx[study_name])
-                if uid == uid_study:
-                    return [path, patient_desc, study_desc]
+#             study_idx = {}
+#             for st in pt['studies']:
+#                 study_name = st['StudyDescription']
+#                 uid_study = st['StudyInstanceUID']
+#                 if study_name in study_idx:
+#                     study_idx[study_name] += 1
+#                 else:
+#                     study_idx[study_name] = 0
+#                 study_desc = (study_name, study_idx[study_name])
+#                 if uid == uid_study:
+#                     return [path, patient_desc, study_desc]
                 
-                else:
+#                 else:
 
-                    series_idx = {}
-                    for uid_series in df_study.SeriesInstanceUID.dropna().unique():
-                        df_series = df_study[df_study.SeriesInstanceUID == uid_series]
-                        series_name = df_series.SeriesDescription.values[0]
-                        if series_name in series_idx:
-                            series_idx[series_name] += 1
-                        else:
-                            series_idx[series_name] = 0
-                        series_desc = (series_name, series_idx[series_name])
-                        if uid == uid_series:
-                            return [path, patient_desc, study_desc, series_desc]
+#                     series_idx = {}
+#                     for sr in st['series']:
+#                         series_name = sr['SeriesDescription']
+#                         uid_series = sr['SeriesInstanceUID']
+#                         if series_name in series_idx:
+#                             series_idx[series_name] += 1
+#                         else:
+#                             series_idx[series_name] = 0
+#                         series_desc = (series_name, series_idx[series_name])
+#                         if uid == uid_series:
+#                             return [path, patient_desc, study_desc, series_desc]
                         
-    raise ValueError(f"No information entity with UID {uid} was found.")
+#     raise ValueError(f"No information entity with UID {uid} was found.")
 
 
-def uid(df, entity): # uid from entity
-    df = df[df.removed == False]
+def uid(dbtree, entity): # uid from entity
     if len(entity)==2:
-        return _patient_uid(df, entity)
+        return _patient_uid(dbtree, entity)
     if len(entity)==3:
-        return _study_uid(df, entity)
+        return _study_uid(dbtree, entity)
     if len(entity)==4:
-        return _series_uid(df, entity)
+        return _series_uid(dbtree, entity)
 
 
-def _patient_uid(df, patient):
+def _patient_uid(dbtree, patient):
     patient = patient[1]
-    df = df[df.removed == False]
     patients = {}
     patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
+    for pt in dbtree:
+        patient_name = pt['PatientName']
+        uid_patient = pt['PatientID']
         if patient_name in patient_idx:
             patient_idx[patient_name] += 1
         else:
@@ -136,76 +189,75 @@ def _patient_uid(df, patient):
     raise ValueError(f"Patient {patient} not found in database.")
     
 
-def _study_uid(df, study):
-    uid_patient = _patient_uid(df, study[:-1])
+def _study_uid(dbtree, study):
+    uid_patient = _patient_uid(dbtree, study[:-1])
     patient, study = study[1], study[2]
-    df = df[df.removed == False] # TODO_manager must do this before passing df
-    df_patient = df[df.PatientID == uid_patient]
-    studies = {}
-    study_idx = {}
-    for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-        df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-        study_desc = df_study.StudyDescription.values[0]
-        if study_desc in study_idx:
-            study_idx[study_desc] += 1
-        else:
-            study_idx[study_desc] = 0
-        study_desc = (study_desc, study_idx[study_desc])
-        if study == study_desc:
-            return uid_study
-        studies[study_desc] = uid_study
-    if isinstance(study, str):
-        studies_list = [s for s in studies.keys() if s[0]==study]
-        if len(studies_list) == 1:
-            return studies[(study, 0)]
-        elif len(studies_list) > 1:
-            raise ValueError(
-                f"Multiple studies with name {study}."
-                f"Please specify the index in the call to study_uid(). "
-                f"For instance ({study}, {len(studies)-1})'. "
-            )
-    raise ValueError(f"Study {study} not found in patient {patient}.")
+    for pt in dbtree:
+        if pt['PatientID'] == uid_patient:
+            studies = {}
+            study_idx = {}
+            for st in pt['studies']:
+                study_desc = st['StudyDescription']
+                uid_study = st['StudyInstanceUID']
+                if study_desc in study_idx:
+                    study_idx[study_desc] += 1
+                else:
+                    study_idx[study_desc] = 0
+                study_desc = (study_desc, study_idx[study_desc])
+                if study == study_desc:
+                    return uid_study
+                studies[study_desc] = uid_study
+            if isinstance(study, str):
+                studies_list = [s for s in studies.keys() if s[0]==study]
+                if len(studies_list) == 1:
+                    return studies[(study, 0)]
+                elif len(studies_list) > 1:
+                    raise ValueError(
+                        f"Multiple studies with name {study}."
+                        f"Please specify the index in the call to study_uid(). "
+                        f"For instance ({study}, {len(studies)-1})'. "
+                    )
+            raise ValueError(f"Study {study} not found in patient {patient}.")
 
 
-def _series_uid(df, series): # absolute path to series
-    uid_study = _study_uid(df, series[:-1])
+def _series_uid(dbtree, series): # absolute path to series
+    uid_study = _study_uid(dbtree, series[:-1])
     study, sery = series[2], series[3]
-    df = df[df.removed == False]
-    df_study = df[df.StudyInstanceUID == uid_study]
-    series = {}
-    series_idx = {}
-    for uid_series in df_study.SeriesInstanceUID.dropna().unique():
-        df_series = df_study[df_study.SeriesInstanceUID == uid_series]
-        series_desc = df_series.SeriesDescription.values[0]
-        if series_desc in series_idx:
-            series_idx[series_desc] += 1
-        else:
-            series_idx[series_desc] = 0
-        series_desc = (series_desc, series_idx[series_desc])
-        if sery == series_desc:
-            return uid_series
-        series[series_desc] = uid_series
-    if isinstance(sery, str):
-        series_list = [s for s in series.keys() if s[0]==sery]
-        if len(series_list) == 1:
-            return series[(sery, 0)]
-        elif len(series_list) > 1:
-            raise ValueError(
-                f"Multiple series with name {sery}."
-                f"Please specify the index in the call to series_uid(). "
-                f"For instance ({sery}, {len(series)-1})'. "
-            )
-    raise ValueError(f"Series {sery} not found in study {study}.")
+    for pt in dbtree:
+        for st in pt['studies']:
+            if st['StudyInstanceUID'] == uid_study:
+                series = {}
+                series_idx = {}
+                for sr in st['series']:
+                    series_desc = sr['SeriesDescription']
+                    uid_series = sr['SeriesInstanceUID']
+                    if series_desc in series_idx:
+                        series_idx[series_desc] += 1
+                    else:
+                        series_idx[series_desc] = 0
+                    series_desc = (series_desc, series_idx[series_desc])
+                    if sery == series_desc:
+                        return uid_series
+                    series[series_desc] = uid_series
+                if isinstance(sery, str):
+                    series_list = [s for s in series.keys() if s[0]==sery]
+                    if len(series_list) == 1:
+                        return series[(sery, 0)]
+                    elif len(series_list) > 1:
+                        raise ValueError(
+                            f"Multiple series with name {sery}."
+                            f"Please specify the index in the call to series_uid(). "
+                            f"For instance ({sery}, {len(series)-1})'. "
+                        )
+                raise ValueError(f"Series {sery} not found in study {study}.")
 
 
-def patients(df, database, name=None, contains=None, isin=None):
-    df = _prep(df)
+def patients(dbtree, database, name=None, contains=None, isin=None):
     simplified_patients = []
     patients = []
     patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
+    for pt in dbtree:
+        patient_name = pt['PatientName']
         if patient_name in patient_idx:
             patient_idx[patient_name] += 1
         else:
@@ -224,7 +276,7 @@ def patients(df, database, name=None, contains=None, isin=None):
                     patients_result.append(s)
             elif s[0] == name: 
                 patients_result.append(s)
-        return [[path, p] for p in patients_result]
+        return [[database, p] for p in patients_result]
     elif contains is not None:
         patients_result = []
         for s in simplified_patients:
@@ -247,17 +299,15 @@ def patients(df, database, name=None, contains=None, isin=None):
         return [[database, p] for p in simplified_patients]
 
 
-def studies(df, pat, name=None, contains=None, isin=None):
+def studies(dbtree, pat, name=None, contains=None, isin=None):
     database, patient = pat[0], pat[1]
     patient_as_str = isinstance(patient, str)
     if patient_as_str:
         patient = (patient, 0)
-    df = _prep(df)
     simplified_studies = []
     patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
+    for pt in dbtree:
+        patient_name = pt['PatientName']
         if patient_name in patient_idx:
             patient_idx[patient_name] += 1
         else:
@@ -272,9 +322,8 @@ def studies(df, pat, name=None, contains=None, isin=None):
         if patient == (patient_name, patient_idx[patient_name]):
             studies = []
             study_idx = {}
-            for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-                df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-                study_desc = df_study.StudyDescription.values[0]
+            for st in pt['studies']:
+                study_desc = st['StudyDescription']
                 if study_desc in study_idx:
                     study_idx[study_desc] += 1
                 else:
@@ -319,7 +368,7 @@ def studies(df, pat, name=None, contains=None, isin=None):
 
 
 
-def series(df, stdy, name=None, contains=None, isin=None):
+def series(dbtree, stdy, name=None, contains=None, isin=None):
     database, patient, study = stdy[0], stdy[1], stdy[2]
     patient_as_str = isinstance(patient, str)
     if patient_as_str:
@@ -327,12 +376,10 @@ def series(df, stdy, name=None, contains=None, isin=None):
     study_as_str = isinstance(study, str)
     if study_as_str:
         study = (study, 0)
-    df = _prep(df)
     simplified_series = []
     patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
+    for pt in dbtree:
+        patient_name = pt['PatientName']
         if patient_name in patient_idx:
             patient_idx[patient_name] += 1
         else:
@@ -345,9 +392,8 @@ def series(df, stdy, name=None, contains=None, isin=None):
                     )
         if patient == (patient_name, patient_idx[patient_name]):
             study_idx = {}
-            for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-                df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-                study_desc = df_study.StudyDescription.values[0]
+            for st in pt['studies']:
+                study_desc = st['StudyDescription']
                 if study_desc in study_idx:
                     study_idx[study_desc] += 1
                 else:
@@ -361,9 +407,8 @@ def series(df, stdy, name=None, contains=None, isin=None):
                 if study == (study_desc, study_idx[study_desc]):
                     series = []
                     series_idx = {}
-                    for uid_sery in df_study.SeriesInstanceUID.dropna().unique():
-                        df_series = df_study[df_study.SeriesInstanceUID == uid_sery]
-                        series_desc = df_series.SeriesDescription.values[0]
+                    for sr in st['series']:
+                        series_desc = sr['SeriesDescription']
                         if series_desc in series_idx:
                             series_idx[series_desc] += 1
                         else:
@@ -407,47 +452,40 @@ def series(df, stdy, name=None, contains=None, isin=None):
         return [[database, patient, study, series] for series in simplified_series] 
     
 
-def print_tree(df):
-    tree = summary(df)
-    for patient, studies in tree.items():
-        print(f"Patient: ({patient[0]}, {patient[1]})")
-        for study, series in studies.items():
-            print(f"  Study: ({study[0]}, {study[1]})")
-            for s in series:
-                print(f"    Series: ({s[0]}, {s[1]})")
 
-def append(df, parent, child_name): 
+
+def append(dbtree, parent, child_name): 
     if len(parent) == 1:
-        return _new_patient(df, parent, child_name)
+        return _new_patient(dbtree, parent, child_name)
     elif len(parent) == 2:
-        return _new_study(df, parent, child_name)
+        return _new_study(dbtree, parent, child_name)
     elif len(parent) == 3:
-        return _new_series(df, parent, child_name)
+        return _new_series(dbtree, parent, child_name)
 
-def _new_patient(df, database, patient_name):
+def _new_patient(dbtree, database, patient_name):
     # Count the number of series with the same description
     desc = patient_name if isinstance(patient_name, str) else patient_name[0]
-    patients_in_db = patients(df, database, name=desc)
+    patients_in_db = patients(dbtree, database, name=desc)
     cnt = len(patients_in_db)
     if cnt==0:
         return [database, desc]
     else:
         return [database, (desc, cnt+1)]
     
-def _new_study(df, patient, study_name): #len(patient)=2
+def _new_study(dbtree, patient, study_name): #len(patient)=2
     # Count the number of series with the same description
     desc = study_name if isinstance(study_name, str) else study_name[0]
-    studies_in_patient = studies(df, patient, name=desc)
+    studies_in_patient = studies(dbtree, patient, name=desc)
     cnt = len(studies_in_patient)
     if cnt==0:
         return patient + [desc]
     else:
         return patient + [(desc, cnt+1)]
     
-def _new_series(df, study, series_name): #len(study)=3
+def _new_series(dbtree, study, series_name): #len(study)=3
     # Count the number of series with the same description
     desc = series_name if isinstance(series_name, str) else series_name[0]
-    series_in_study = series(df, study, name=desc)
+    series_in_study = series(dbtree, study, name=desc)
     cnt = len(series_in_study)
     if cnt==0:
         return study + [desc]
@@ -455,49 +493,92 @@ def _new_series(df, study, series_name): #len(study)=3
         return study + [(desc, cnt+1)]
 
 
-def uid_tree(df, path, depth=3):
+# def uid_tree(df, path, depth=3):
 
-    if df is None:
-        raise ValueError('Cannot build tree - no database open')
-    df = df[df.removed == False]
-    df.sort_values(['PatientName','StudyDate','SeriesNumber','InstanceNumber'], inplace=True)
+#     dbtree = summary(df)
     
-    database = {'uid': path}
-    database['patients'] = []
-    for uid_patient in df.PatientID.dropna().unique():
-        patient = {'uid': uid_patient}
-        database['patients'].append(patient)
-        if depth >= 1:
-            df_patient = df[df.PatientID == uid_patient]
-            patient['key'] = df_patient.index[0]
-            patient['studies'] = []
-            for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-                study = {'uid': uid_study}
-                patient['studies'].append(study)
-                if depth >= 2:
-                    df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-                    study['key'] = df_study.index[0]
-                    study['series'] = []
-                    for uid_sery in df_study.SeriesInstanceUID.dropna().unique():
-                        series = {'uid': uid_sery}
-                        study['series'].append(series)
-                        if depth == 3:
-                            df_series = df_study[df_study.SeriesInstanceUID == uid_sery]
-                            series['key'] = df_series.index[0]
-    return database
+#     database = {'uid': path}
+#     database['patients'] = []
+#     for pat in dbtree:
+#         patient = {'uid': pat['PatientID']}
+#         database['patients'].append(patient)
+#         if depth >= 1:
+#             df_patient = df[df.PatientID == pat['PatientID']]
+#             patient['key'] = df_patient.index[0] 
+#             patient['studies'] = []
+#             for stdy in pat['studies']:
+#                 study = {'uid': stdy['StudyInstanceUID']}
+#                 patient['studies'].append(study)
+#                 if depth >= 2:
+#                     df_study = df_patient[df_patient.StudyInstanceUID == stdy['StudyInstanceUID']]
+#                     study['key'] = df_study.index[0]
+#                     study['series'] = []
+#                     for sery in stdy['series']:
+#                         series = {'uid': sery['SeriesInstanceUID']}
+#                         study['series'].append(series)
+#                         if depth == 3:
+#                             df_series = df_study[df_study.SeriesInstanceUID == sery['SeriesInstanceUID']]
+#                             series['key'] = df_series.index[0]
+#     return database
+
+
+def print_tree(dbtree):
+    tree = summary(dbtree)
+    for patient, studies in tree.items():
+        print(f"Patient: ({patient[0]}, {patient[1]})")
+        for study, series in studies.items():
+            print(f"  Study: ({study[0]}, {study[1]})")
+            for s in series:
+                print(f"    Series: ({s[0]}, {s[1]})")
+
+
+# def summary(df):
+#     # A human-readable summary tree
+
+#     df = _prep(df)
+#     summary = {}
+
+#     patient_idx = {}
+#     for uid_patient in df.PatientID.dropna().unique():
+#         df_patient = df[df.PatientID == uid_patient]
+#         patient_name = df_patient.PatientName.values[0]
+#         if patient_name in patient_idx:
+#             patient_idx[patient_name] += 1
+#         else:
+#             patient_idx[patient_name] = 0
+#         summary[patient_name, patient_idx[patient_name]] = {}
+
+#         study_idx = {}
+#         for uid_study in df_patient.StudyInstanceUID.dropna().unique():
+#             df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
+#             study_desc = df_study.StudyDescription.values[0]
+#             if study_desc in study_idx:
+#                 study_idx[study_desc] += 1
+#             else:
+#                 study_idx[study_desc] = 0
+#             summary[patient_name, patient_idx[patient_name]][study_desc, study_idx[study_desc]] = []
+
+#             series_idx = {}
+#             for uid_sery in df_study.SeriesInstanceUID.dropna().unique():
+#                 df_series = df_study[df_study.SeriesInstanceUID == uid_sery]
+#                 series_desc = df_series.SeriesDescription.values[0]
+#                 if series_desc in series_idx:
+#                     series_idx[series_desc] += 1
+#                 else:
+#                     series_idx[series_desc] = 0
+#                 summary[patient_name, patient_idx[patient_name]][study_desc, study_idx[study_desc]].append((series_desc, series_idx[series_desc]))
     
+#     return summary
 
 
-def summary(df):
+def summary(dbtree):
     # A human-readable summary tree
 
-    df = _prep(df)
     summary = {}
 
     patient_idx = {}
-    for uid_patient in df.PatientID.dropna().unique():
-        df_patient = df[df.PatientID == uid_patient]
-        patient_name = df_patient.PatientName.values[0]
+    for patient in dbtree:
+        patient_name = patient['PatientName']
         if patient_name in patient_idx:
             patient_idx[patient_name] += 1
         else:
@@ -505,9 +586,8 @@ def summary(df):
         summary[patient_name, patient_idx[patient_name]] = {}
 
         study_idx = {}
-        for uid_study in df_patient.StudyInstanceUID.dropna().unique():
-            df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
-            study_desc = df_study.StudyDescription.values[0]
+        for study in patient['studies']:
+            study_desc = study['StudyDescription']
             if study_desc in study_idx:
                 study_idx[study_desc] += 1
             else:
@@ -515,9 +595,8 @@ def summary(df):
             summary[patient_name, patient_idx[patient_name]][study_desc, study_idx[study_desc]] = []
 
             series_idx = {}
-            for uid_sery in df_study.SeriesInstanceUID.dropna().unique():
-                df_series = df_study[df_study.SeriesInstanceUID == uid_sery]
-                series_desc = df_series.SeriesDescription.values[0]
+            for series in study['series']:
+                series_desc = series['SeriesDescription']
                 if series_desc in series_idx:
                     series_idx[series_desc] += 1
                 else:
@@ -525,3 +604,5 @@ def summary(df):
                 summary[patient_name, patient_idx[patient_name]][study_desc, study_idx[study_desc]].append((series_desc, series_idx[series_desc]))
     
     return summary
+
+

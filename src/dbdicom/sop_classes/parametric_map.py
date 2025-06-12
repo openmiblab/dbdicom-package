@@ -7,9 +7,11 @@ from datetime import datetime
 
 
 
-def create_parametric_map(rows=64, cols=64, frames=1):
-    # Create dummy pixel data (floating point)
-    pixel_array = np.random.rand(frames, rows, cols).astype(np.float32)
+def default():
+
+    rows=16
+    cols=16
+    frames=1
 
     # File Meta Information
     file_meta = Dataset()
@@ -32,8 +34,11 @@ def create_parametric_map(rows=64, cols=64, frames=1):
     ds.PatientID = "123456"
     ds.StudyDate = datetime.now().strftime("%Y%m%d")
     ds.StudyTime = datetime.now().strftime("%H%M%S")
+    ds.ContentDate = datetime.now().strftime("%Y%m%d")
+    ds.ContentTime = datetime.now().strftime("%H%M%S")
     ds.Modality = "OT"
     ds.Manufacturer = "SyntheticGenerator"
+    ds.SeriesDescription = 'Minimal parametric map'
 
     # General Image
     ds.SeriesNumber = 1
@@ -43,38 +48,107 @@ def create_parametric_map(rows=64, cols=64, frames=1):
     ds.ImageType = ['DERIVED', 'PRIMARY']
     ds.ContentLabel = "PMAP"
     ds.ContentDescription = "Synthetic Parametric Map"
-    ds.ContentCreatorName = "OpenAI"
+    ds.ContentCreatorName = "dbdicom"
 
     # Pixel Data
-    ds.Rows = rows
-    ds.Columns = cols
     ds.NumberOfFrames = frames
-    ds.PixelData = pixel_array.tobytes()
     ds.SamplesPerPixel = 1
     ds.PhotometricInterpretation = "MONOCHROME2"
+
+    ds.Rows = rows
+    ds.Columns = cols
     ds.BitsAllocated = 32
     ds.BitsStored = 32
     ds.HighBit = 31
     ds.PixelRepresentation = 1  # 1 = signed, 0 = unsigned
-    ds.FloatPixelData = pixel_array.astype(np.float32).tobytes()
-    ds.PixelData = b''  # Actual data goes in FloatPixelData
+    ds.FloatPixelData = np.zeros((rows, cols), dtype=np.float32).tobytes()
+    #ds.PixelData = np.zeros((rows, cols), dtype=np.int16).tobytes()
+
+    # Required Parametric Map Attributes
+    ds.PixelMeasuresSequence = [Dataset()]
+    ds.PixelMeasuresSequence[0].SliceThickness = 1.0
+    ds.PixelMeasuresSequence[0].PixelSpacing = [1.0, 1.0]
+
+    ds.FrameOfReferenceUID = pydicom.uid.generate_uid()
 
     # Functional Group Sequences (minimal dummy values)
     ds.SharedFunctionalGroupsSequence = [Dataset()]
-    ds.PerFrameFunctionalGroupsSequence = [Dataset() for _ in range(frames)]
+    ds.SharedFunctionalGroupsSequence[0].PixelMeasuresSequence = [Dataset()]
+    ds.SharedFunctionalGroupsSequence[0].PixelMeasuresSequence[0].PixelSpacing = [1.0, 1.0]
+    ds.SharedFunctionalGroupsSequence[0].PlaneOrientationSequence = [Dataset()]
+    ds.SharedFunctionalGroupsSequence[0].PlaneOrientationSequence[0].ImageOrientationPatient = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
 
-    # Add dummy Dimension Organization
-    ds.DimensionOrganizationSequence = [Dataset()]
-    ds.DimensionOrganizationSequence[0].DimensionOrganizationUID = generate_uid()
-
-    ds.DimensionIndexSequence = [
-        Dataset() for _ in range(1)
-    ]
-    ds.DimensionIndexSequence[0].DimensionOrganizationUID = ds.DimensionOrganizationSequence[0].DimensionOrganizationUID
-    ds.DimensionIndexSequence[0].DimensionIndexPointer = (0x0020, 0x9157)  # In-stack position
-    ds.DimensionIndexSequence[0].FunctionalGroupPointer = (0x0020, 0x9116)
+    ds.PerFrameFunctionalGroupsSequence = []
+    for i in range(ds.NumberOfFrames):
+        frame = Dataset()
+        frame.PlanePositionSequence = [Dataset()]
+        frame.PlanePositionSequence[0].ImagePositionPatient = [0.0, 0.0, float(i)]
+        ds.PerFrameFunctionalGroupsSequence.append(frame)
 
     return ds
+
+
+
+def set_pixel_data(ds, array):
+
+    array = np.transpose(array)
+    ds.RescaleSlope = 1
+    ds.RescaleIntercept = 0
+    ds.Rows = array.shape[0]
+    ds.Columns = array.shape[1]
+
+    if array.dtype==np.int16:
+        ds.BitsAllocated = 16
+        ds.BitsStored = 16
+        ds.HighBit = 15
+        ds.PixelRepresentation = 1 # signed
+        ds.PixelData = array.tobytes()
+    elif array.dtype==np.float32:
+        ds.BitsAllocated = 32
+        ds.BitsStored = 32
+        ds.HighBit = 31
+        ds.PixelRepresentation = 1 # signed
+        ds.FloatPixelData = array.tobytes()
+    elif array.dtype==np.float64:
+        ds.BitsAllocated = 64
+        ds.BitsStored = 64
+        ds.HighBit = 63
+        ds.PixelRepresentation = 1 # signed
+        ds.DoubleFloatPixelData = array.tobytes()
+    else:
+        raise ValueError(
+            f"Parametric map storage currently only available for "
+            f"32-bit float, 64-bit float or 16-bit int."
+        )
+
+
+def pixel_data(ds):
+
+    try:
+        array = ds.pixel_array
+    except:
+        raise ValueError("Dataset has no pixel data.")
+
+    if ds.PixelRepresentation != 1:
+        raise ValueError(
+            "Currently only signed integer or floating point supported."
+        )
+
+    slope = float(getattr(ds, 'RescaleSlope', 1)) 
+    intercept = float(getattr(ds, 'RescaleIntercept', 0)) 
+    array *= slope
+    array += intercept
+    if hasattr(ds, 'PixelData'):
+        array = array.astype(np.int16)
+    elif hasattr(ds, 'FloatPixelData'):
+        array = array.astype(np.float32)
+    elif hasattr(ds, 'DoubleFloatPixelData'):
+        array = array.astype(np.float64)
+    return np.transpose(array)
+
+
+
+
 
 
 

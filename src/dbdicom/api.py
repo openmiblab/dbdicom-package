@@ -1,5 +1,4 @@
 
-import numpy as np
 import vreg
 
 from dbdicom.dbd import DataBaseDicom
@@ -16,6 +15,15 @@ def open(path:str) -> DataBaseDicom:
     """
     return DataBaseDicom(path)
 
+def to_json(path):
+    """Summarise the contents of the DICOM folder in a json file
+
+    Args:
+        path (str): path to the DICOM folder
+    """
+    dbd = open(path)
+    dbd.close()   
+
 def print(path):
     """Print the contents of the DICOM folder
 
@@ -24,6 +32,7 @@ def print(path):
     """
     dbd = open(path)
     dbd.print()
+    dbd.close()
 
 
 def summary(path) -> dict:
@@ -36,7 +45,24 @@ def summary(path) -> dict:
         dict: Nested dictionary with summary information on the database.
     """
     dbd = open(path)
-    return dbd.summary()
+    s = dbd.summary()
+    dbd.close()
+    return s
+
+
+def tree(path) -> dict:
+    """Return the structure of the database as a dictionary tree.
+
+    Args:
+        path (str): path to the DICOM folder
+
+    Returns:
+        dict: Nested dictionary with summary information on the database.
+    """
+    dbd = open(path)
+    s = dbd.register
+    dbd.close()
+    return s
 
 
 def patients(path, name:str=None, contains:str=None, isin:list=None)->list:
@@ -56,7 +82,9 @@ def patients(path, name:str=None, contains:str=None, isin:list=None)->list:
         list: list of patients fulfilling the criteria.
     """
     dbd = open(path)
-    return dbd.patients(name, contains, isin)
+    p = dbd.patients(name, contains, isin)
+    dbd.close()
+    return p
 
 
 def studies(entity:str | list, name:str=None, contains:str=None, isin:list=None)->list:
@@ -79,10 +107,14 @@ def studies(entity:str | list, name:str=None, contains:str=None, isin:list=None)
     """
     if isinstance(entity, str): # path = folder
         dbd = open(entity)
-        return dbd.studies(entity, name, contains, isin)
+        s = dbd.studies(entity, name, contains, isin)
+        dbd.close()
+        return s
     elif len(entity)==2: # path = patient
         dbd = open(entity[0])
-        return dbd.studies(entity, name, contains, isin)
+        s = dbd.studies(entity, name, contains, isin)
+        dbd.close()
+        return s
     else:
         raise ValueError(
             "The path must be a folder or a 2-element list "
@@ -110,10 +142,14 @@ def series(entity:str | list, name:str=None, contains:str=None, isin:list=None)-
     """
     if isinstance(entity, str): # path = folder
         dbd = open(entity)
-        return dbd.series(entity, name, contains, isin)
+        s = dbd.series(entity, name, contains, isin)
+        dbd.close()
+        return s
     elif len(entity) in [2,3]:
         dbd = open(entity[0])
-        return dbd.series(entity, name, contains, isin)
+        s = dbd.series(entity, name, contains, isin)
+        dbd.close()
+        return s
     else:
         raise ValueError(
             "To retrieve a series, the entity must be a database, patient or study."
@@ -168,7 +204,9 @@ def volume(series:list, dims:list=None, multislice=False) -> vreg.Volume3D:
         vreg.Volume3D: vole read from the series.
     """
     dbd = open(series[0])
-    return dbd.volume(series, dims, multislice)
+    vol = dbd.volume(series, dims, multislice)
+    dbd.close()
+    return vol
 
 def write_volume(vol:vreg.Volume3D, series:list, ref:list=None, 
                  multislice=False):
@@ -200,6 +238,7 @@ def to_nifti(series:list, file:str, dims:list=None, multislice=False):
     """
     dbd = open(series[0])
     dbd.to_nifti(series, file, dims, multislice)
+    dbd.close()
 
 def from_nifti(file:str, series:list, ref:list=None, multislice=False):
     """Create a DICOM series from a nifti file.
@@ -232,7 +271,9 @@ def pixel_data(series:list, dims:list=None, include:list=None) -> tuple:
             return value.
     """
     dbd = open(series[0])
-    return dbd.pixel_data(series, dims, include)
+    array = dbd.pixel_data(series, dims, include)
+    dbd.close()
+    return array
 
 # write_pixel_data()
 # values()
@@ -255,7 +296,9 @@ def unique(pars:list, entity:list) -> dict:
         dict: dictionary with unique values for each attribute.
     """
     dbd = open(entity[0])
-    return dbd.unique(pars, entity)
+    u = dbd.unique(pars, entity)
+    dbd.close()
+    return u
 
 
 

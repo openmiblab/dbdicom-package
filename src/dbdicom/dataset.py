@@ -1,15 +1,17 @@
+# Test data
+# https://www.aliza-dicom-viewer.com/download/datasets
+
 import os
 from datetime import datetime
 import struct
 from tqdm import tqdm
 
 import numpy as np
-import pandas as pd
 import pydicom
 from pydicom.util.codify import code_file
 import pydicom.config
-from pydicom.dataset import Dataset
 import vreg
+
 
 import dbdicom.utils.image as image
 import dbdicom.utils.variables as variables
@@ -71,6 +73,8 @@ def new_dataset(sop_class):
         return xray_angiographic_image.default()
     if sop_class == 'UltrasoundMultiFrameImage':
         return ultrasound_multiframe_image.default()
+    if sop_class == 'ParametricMap':
+        return parametric_map.default()
     else:
         raise ValueError(
             f"DICOM class {sop_class} is not currently supported"
@@ -235,7 +239,7 @@ def codify(source_file, save_file, **kwargs):
     file.close()
 
 
-def read_data(files, tags, path=None, images_only=False):
+def read_data(files, tags, path=None, images_only=False): # obsolete??
 
     if np.isscalar(files):
         files = [files]
@@ -262,34 +266,6 @@ def read_data(files, tags, path=None, images_only=False):
     return dict
 
 
-
-def read_dataframe(files, tags, path=None, images_only=False):
-    if np.isscalar(files):
-        files = [files]
-    if np.isscalar(tags):
-        tags = [tags]
-    array = []
-    dicom_files = []
-    for i, file in tqdm(enumerate(files), desc='Reading DICOM folder'):
-        try:
-            ds = pydicom.dcmread(file, force=True, specific_tags=tags+['Rows'])
-        except:
-            pass
-        else:
-            if isinstance(ds, pydicom.dataset.FileDataset):
-                if 'TransferSyntaxUID' in ds.file_meta:
-                    if images_only:
-                        if not 'Rows' in ds:
-                            continue
-                    row = get_values(ds, tags)
-                    array.append(row)
-                    if path is None:
-                        index = file
-                    else:
-                        index = os.path.relpath(file, path)
-                    dicom_files.append(index) 
-    df = pd.DataFrame(array, index = dicom_files, columns = tags)
-    return df
 
 
 def _add_new(ds, tag, value, VR='OW'):
@@ -583,7 +559,7 @@ def pixel_data(ds):
     try:
         array = ds.pixel_array
     except:
-        return None
+        raise ValueError("Dataset has no pixel data.")
     array = array.astype(np.float32)
     slope = float(getattr(ds, 'RescaleSlope', 1)) 
     intercept = float(getattr(ds, 'RescaleIntercept', 0)) 
@@ -592,7 +568,7 @@ def pixel_data(ds):
     return np.transpose(array)
 
 
-def set_pixel_data(ds, array, value_range=None):
+def set_pixel_data(ds, array):
     if array is None:
         raise ValueError('The pixel array cannot be set to an empty value.')
     
@@ -608,7 +584,7 @@ def set_pixel_data(ds, array, value_range=None):
     # if array.ndim >= 3: # remove spurious dimensions of 1
     #     array = np.squeeze(array) 
 
-    array = image.clip(array.astype(np.float32), value_range=value_range)
+    array = image.clip(array.astype(np.float32))
     array, slope, intercept = image.scale_to_range(array, ds.BitsAllocated)
     array = np.transpose(array)
 
@@ -632,6 +608,15 @@ def volume(ds, multislice=False):
 def set_volume(ds, volume:vreg.Volume3D, multislice=False):
     if volume is None:
         raise ValueError('The volume cannot be set to an empty value.')
+    try:
+        mod = SOPCLASSMODULE[ds.SOPClassUID]
+    except KeyError:
+        raise ValueError(
+            f"DICOM class {ds.SOPClassUID} is not currently supported."
+        )
+    if hasattr(mod, 'set_volume'):
+        return getattr(mod, 'set_volume')(ds, volume)
+    
     image = np.squeeze(volume.values)
     if image.ndim != 2:
         raise ValueError("Can only write 2D images to a dataset.")
@@ -712,41 +697,7 @@ def set_signal_type(ds, value):
 
 
 
+if __name__=='__main__':
 
-# def _initialize(ds, UID=None, ref=None): # ds is pydicom dataset
-
-#     # Date and Time of Creation
-#     dt = datetime.now()
-#     timeStr = dt.strftime('%H%M%S')  # long format with micro seconds
-
-#     ds.ContentDate = dt.strftime('%Y%m%d')
-#     ds.ContentTime = timeStr
-#     ds.AcquisitionDate = dt.strftime('%Y%m%d')
-#     ds.AcquisitionTime = timeStr
-#     ds.SeriesDate = dt.strftime('%Y%m%d')
-#     ds.SeriesTime = timeStr
-#     ds.InstanceCreationDate = dt.strftime('%Y%m%d')
-#     ds.InstanceCreationTime = timeStr
-
-#     if UID is not None:
-
-#         # overwrite UIDs
-#         ds.PatientID = UID[0]
-#         ds.StudyInstanceUID = UID[1]
-#         ds.SeriesInstanceUID = UID[2]
-#         ds.SOPInstanceUID = UID[3]
-
-#     if ref is not None: 
-
-#         # Series, Instance and Class for Reference
-#         refd_instance = Dataset()
-#         refd_instance.ReferencedSOPClassUID = ref.SOPClassUID
-#         refd_instance.ReferencedSOPInstanceUID = ref.SOPInstanceUID
-
-#         refd_series = Dataset()
-#         refd_series.ReferencedInstanceSequence = Sequence([refd_instance])
-#         refd_series.SeriesInstanceUID = ds.SeriesInstanceUID
-
-#         ds.ReferencedSeriesSequence = Sequence([refd_series])
-
-#     return ds
+    pass
+    #codify('C:\\Users\\md1spsx\\Documents\\f32bit.dcm', 'C:\\Users\\md1spsx\\Documents\\f32bit.py')
