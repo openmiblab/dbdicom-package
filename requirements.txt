@@ -2,7 +2,7 @@ tqdm
 importlib-resources
 numpy
 pandas
-pydicom
-python-gdcm
-pylibjpeg-libjpeg
+pydicom[basic,pixeldata]
+#python-gdcm
+#pylibjpeg-libjpeg
 vreg

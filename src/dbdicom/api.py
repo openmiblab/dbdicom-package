@@ -1,5 +1,4 @@
 
-import numpy as np
 import vreg
 
 from dbdicom.dbd import DataBaseDicom
@@ -15,6 +14,15 @@ def open(path:str) -> DataBaseDicom:
         DataBaseDicom: database instance.
     """
     return DataBaseDicom(path)
+
+def to_json(path):
+    """Summarise the contents of the DICOM folder in a json file
+
+    Args:
+        path (str): path to the DICOM folder
+    """
+    dbd = open(path)
+    dbd.close()   
 
 def print(path):
     """Print the contents of the DICOM folder
@@ -38,6 +46,21 @@ def summary(path) -> dict:
     """
     dbd = open(path)
     s = dbd.summary()
+    dbd.close()
+    return s
+
+
+def tree(path) -> dict:
+    """Return the structure of the database as a dictionary tree.
+
+    Args:
+        path (str): path to the DICOM folder
+
+    Returns:
+        dict: Nested dictionary with summary information on the database.
+    """
+    dbd = open(path)
+    s = dbd.register
     dbd.close()
     return s
 
