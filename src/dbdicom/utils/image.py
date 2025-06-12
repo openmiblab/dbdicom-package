@@ -16,9 +16,10 @@ def affine_matrix(      # single slice function
     column_cosine = np.array(image_orientation[3:])
     slice_cosine = np.cross(row_cosine, column_cosine)
 
-    # The coronal orientation has a left-handed reference frame
-    if np.array_equal(np.around(image_orientation, 3), [1,0,0,0,0,-1]):
-        slice_cosine = -slice_cosine
+    # This should not be addressed here
+    # # The coronal orientation has a left-handed reference frame
+    # if np.array_equal(np.around(image_orientation, 3), [1,0,0,0,0,-1]):
+    #     slice_cosine = -slice_cosine
 
     affine = np.identity(4, dtype=np.float32)
     affine[:3, 0] = row_cosine * column_spacing
@@ -39,9 +40,9 @@ def slice_location(
     column_cosine = np.array(image_orientation[3:]) 
     slice_cosine = np.cross(row_cosine, column_cosine)
 
-    # The coronal orientation has a left-handed reference frame
-    if np.array_equal(np.around(image_orientation, 3), [1,0,0,0,0,-1]):
-        slice_cosine = -slice_cosine
+    # # The coronal orientation has a left-handed reference frame
+    # if np.array_equal(np.around(image_orientation, 3), [1,0,0,0,0,-1]):
+    #     slice_cosine = -slice_cosine
 
     return np.dot(np.array(image_position), slice_cosine)
 

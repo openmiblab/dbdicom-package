@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import json
 
 from tqdm import tqdm
 import numpy as np
@@ -8,9 +9,9 @@ import vreg
 from pydicom.dataset import Dataset
 
 import dbdicom.utils.arrays
-import dbdicom.utils.files as filetools
-import dbdicom.utils.dcm4che as dcm4che
+
 import dbdicom.dataset as dbdataset
+import dbdicom.database as dbdatabase
 import dbdicom.register as register
 import dbdicom.const as const
 
@@ -32,7 +33,8 @@ class DataBaseDicom():
         file = self._register_file()
         if os.path.exists(file):
             try:
-                self.register = pd.read_pickle(file)
+                with open(file, 'r') as f:
+                    self.register = json.load(f)
             except:
                 # If the file is corrupted, delete it and load again
                 os.remove(file)
@@ -44,19 +46,28 @@ class DataBaseDicom():
     def read(self):
         """Read the DICOM folder again
         """
-
-        files = filetools.all_files(self.path)
-        self.register = dbdataset.read_dataframe(
-            files, 
-            register.COLUMNS + ['NumberOfFrames','SOPClassUID'], 
-            path=self.path, 
-            images_only = True)
-        self.register['removed'] = False
-        self.register['created'] = False
-        # No support for multiframe data at the moment
-        self._multiframe_to_singleframe()
+        self.register = dbdatabase.read(self.path)
         # For now ensure all series have just a single CIOD
-        self._split_series()
+        # Leaving this out for now until the issue occurs again
+        # self._split_series()
+        return self
+
+    
+
+    def delete(self, entity):
+        """Delete a DICOM entity from the database
+
+        Args:
+            entity (list): entity to delete
+        """
+        removed = register.index(self.register, entity)
+        # delete datasets marked for removal
+        for index in removed.tolist():
+            file = os.path.join(self.path, index)
+            if os.path.exists(file): 
+                os.remove(file)
+        # and drop then from the register
+        self.register = register.drop(removed)
         return self
     
 
@@ -65,54 +76,15 @@ class DataBaseDicom():
         
         This also saves changes in the header file to disk.
         """
-
-        created = self.register.created & (self.register.removed==False) 
-        removed = self.register.removed
-        created = created[created].index
-        removed = removed[removed].index
-
-        # delete datasets marked for removal
-        for index in removed.tolist():
-            file = os.path.join(self.path, index)
-            if os.path.exists(file): 
-                os.remove(file)
-        # and drop then from the register
-        self.register.drop(index=removed, inplace=True)
-
-        # for new or edited data, mark as saved.
-        self.register.loc[created, 'created'] = False
-
-        # save register
+        # Save df as pkl
         file = self._register_file()
-        self.register.to_pickle(file)
+        with open(file, 'w') as f:
+            json.dump(self.register, f, indent=4)
         return self
+
+    def _register_file(self):
+        return os.path.join(self.path, 'dbtree.json') 
     
-
-    def restore(self): 
-        """Restore the DICOM folder to the last saved state.""" 
-
-        created = self.register.created 
-        removed = self.register.removed & (self.register.created==False)
-        created = created[created].index
-        removed = removed[removed].index
-
-        # permanently delete newly created datasets
-        for index in created.tolist():
-            file = os.path.join(self.path, index)
-            if os.path.exists(file): 
-                os.remove(file)
-
-        # and drop then from the register
-        self.register.drop(index=created, inplace=True)
-
-        # Restore those that were marked for removal
-        self.register.loc[removed, 'removed'] = False
-
-        # save register
-        file = self._register_file()
-        self.register.to_pickle(file)
-        return self    
-
 
     def summary(self):
         """Return a summary of the contents of the database.
@@ -122,6 +94,7 @@ class DataBaseDicom():
         """
         return register.summary(self.register)
     
+
     def print(self):
         """Print the contents of the DICOM folder
         """
@@ -277,10 +250,11 @@ class DataBaseDicom():
             dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
             multislice (bool, optional): Whether the data are to be read 
                 as multislice or not. In multislice data the voxel size 
-                is taken from the slice gap rather thsan the slice thickness. Defaults to False.
+                is taken from the slice gap rather than the slice thickness. Defaults to False.
         """
         if ref is None:
             ds = dbdataset.new_dataset('MRImage')
+            #ds = dbdataset.new_dataset('ParametricMap')
         else:
             if ref[0] == series[0]:
                 ref_mgr = self
@@ -293,12 +267,11 @@ class DataBaseDicom():
         attr = self._attributes(series)
         n = self._max_instance_number(attr['SeriesInstanceUID'])
 
-        new_instances = {}
         if vol.ndim==3:
             slices = vol.split()
             for i, sl in tqdm(enumerate(slices), desc='Writing volume..'):
                 dbdataset.set_volume(ds, sl, multislice)
-                self._write_dataset(ds, attr, n + 1 + i, new_instances)
+                self._write_dataset(ds, attr, n + 1 + i)
         else:
             i=0
             vols = vol.separate().reshape(-1)
@@ -306,10 +279,9 @@ class DataBaseDicom():
                 for sl in vt.split():
                     dbdataset.set_volume(ds, sl, multislice)
                     dbdataset.set_value(ds, sl.dims, sl.coords[:,...])
-                    self._write_dataset(ds, attr, n + 1 + i, new_instances)
+                    self._write_dataset(ds, attr, n + 1 + i)
                     i+=1
-            return self
-        self._update_register(new_instances)
+        return self
 
 
     def to_nifti(self, series:list, file:str, dims=None, multislice=False):
@@ -488,16 +460,6 @@ class DataBaseDicom():
             f"Cannot copy {from_entity} to {to_entity}. "
         )
     
-    def delete(self, entity):
-        """Delete a DICOM entity from the database
-
-        Args:
-            entity (list): entity to delete
-        """
-        index = register.index(self.register, entity)
-        self.register.loc[index,'removed'] = True
-        return self
-
     def move(self, from_entity, to_entity):
         """Move a DICOM entity
 
@@ -510,15 +472,15 @@ class DataBaseDicom():
 
     def _values(self, attributes:list, entity:list):
         # Create a np array v with values for each instance and attribute
-        if set(attributes) <= set(self.register.columns):
-            index = register.index(self.register, entity)
-            v = self.register.loc[index, attributes].values
-        else:
-            files = register.files(self.register, entity)
-            v = np.empty((len(files), len(attributes)), dtype=object)
-            for i, f in enumerate(files):
-                ds = dbdataset.read_dataset(f)
-                v[i,:] = dbdataset.get_values(ds, attributes)
+        # if set(attributes) <= set(dbdatabase.COLUMNS):
+        #     index = register.index(self.register, entity)
+        #     v = self.register.loc[index, attributes].values
+        # else:
+        files = register.files(self.register, entity)
+        v = np.empty((len(files), len(attributes)), dtype=object)
+        for i, f in enumerate(files):
+            ds = dbdataset.read_dataset(f)
+            v[i,:] = dbdataset.get_values(ds, attributes)
         return v
 
     def _copy_patient(self, from_patient, to_patient):
@@ -562,30 +524,28 @@ class DataBaseDicom():
         n = self._max_instance_number(attr['SeriesInstanceUID'])
         
         # Copy the files to the new series 
-        new_instances = {}
         for i, f in tqdm(enumerate(files), total=len(files), desc=f'Copying series {to_series[1:]}'):
             # Read dataset and assign new properties
             ds = dbdataset.read_dataset(f)
-            self._write_dataset(ds, attr, n + 1 + i, new_instances)
-        self._update_register(new_instances)
+            self._write_dataset(ds, attr, n + 1 + i)
 
 
     def _max_series_number(self, study_uid):
-        df = self.register
-        df = df[(df.StudyInstanceUID==study_uid) & (df.removed==False)]
-        n = df['SeriesNumber'].values
-        n = n[n != -1]
-        max_number=0 if n.size==0 else np.amax(n)  
-        return max_number 
+        for pt in self.register:
+            for st in pt['studies']:
+                if st['StudyInstanceUID'] == study_uid:
+                    n = [sr['SeriesNumber'] for sr in st['studies']]
+                    return np.amax(n)
+        return 0
 
     def _max_instance_number(self, series_uid):
-        df = self.register
-        df = df[(df.SeriesInstanceUID==series_uid) & (df.removed==False)]
-        n = df['InstanceNumber'].values
-        n = n[n != -1]
-        max_number=0 if n.size==0 else np.amax(n)  
-        return max_number 
-
+        for pt in self.register:
+            for st in pt['studies']:
+                for sr in st['series']:
+                    if sr['SeriesInstanceUID'] == series_uid:
+                        n = list(sr['instances'].keys())
+                        return np.amax([int(i) for i in n])
+        return 0
 
     def _attributes(self, entity):
         if len(entity)==4:
@@ -653,84 +613,49 @@ class DataBaseDicom():
         return study_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
         
-    def _write_dataset(self, ds:Dataset, attr:dict, instance_nr:int, register:dict):
+    def _write_dataset(self, ds:Dataset, attr:dict, instance_nr:int):
         # Set new attributes 
         attr['SOPInstanceUID'] = dbdataset.new_uid()
-        attr['InstanceNumber'] = instance_nr
+        attr['InstanceNumber'] = str(instance_nr)
         dbdataset.set_values(ds, list(attr.keys()), list(attr.values()))
         # Save results in a new file
         rel_path = os.path.join('dbdicom', dbdataset.new_uid() + '.dcm') 
         dbdataset.write(ds, os.path.join(self.path, rel_path))
-        # Add a row to the register
-        register[rel_path] = dbdataset.get_values(ds, self.register.columns)
+        # Add an entry in the register
+        register.add_instance(self.register, attr, rel_path)
 
 
-    def _update_register(self, new_instances:dict):
-        # A new instances to the register
-        df = pd.DataFrame.from_dict(new_instances, orient='index', columns=self.register.columns)
-        df['removed'] = False
-        df['created'] = True
-        self.register = pd.concat([self.register, df])
+
+    # def _split_series(self):
+    #     """
+    #     Split series with multiple SOP Classes.
+
+    #     If a series contain instances from different SOP Classes, 
+    #     these are separated out into multiple series with identical SOP Classes.
+    #     """
+    #     # For each series, check if there are multiple
+    #     # SOP Classes in the series and split them if yes.
+    #     for series in self.series():
+    #         series_index = register.index(self.register, series)
+    #         df_series = self.register.loc[series_index]
+    #         sop_classes = df_series.SOPClassUID.unique()
+    #         if len(sop_classes) > 1:
+    #             # For each sop_class, create a new series and move all
+    #             # instances of that sop_class to the new series
+    #             desc = series[-1] if isinstance(series, str) else series[0]
+    #             for i, sop_class in tqdm(enumerate(sop_classes[1:]), desc='Splitting series with multiple SOP Classes.'):
+    #                 df_sop_class = df_series[df_series.SOPClassUID == sop_class]
+    #                 relpaths = df_sop_class.index.tolist()
+    #                 sop_class_files = [os.path.join(self.path, p) for p in relpaths]
+    #                 sop_class_series = series[:-1] + [desc + f' [{i+1}]']
+    #                 self._files_to_series(sop_class_files, sop_class_series)
+    #                 # Delete original files permanently
+    #                 self.register.drop(relpaths)
+    #                 for f in sop_class_files:
+    #                     os.remove(f)
+    #     self.register.drop('SOPClassUID', axis=1, inplace=True)
 
 
-    def _register_file(self):
-        filename = os.path.basename(os.path.normpath(self.path)) + ".pkl"
-        return os.path.join(self.path, filename) 
-    
 
-    def _multiframe_to_singleframe(self):
-        """Converts all multiframe files in the folder into single-frame files.
-        
-        Reads all the multi-frame files in the folder,
-        converts them to singleframe files, and delete the original multiframe file.
-        """
-        singleframe = self.register.NumberOfFrames.isnull() 
-        multiframe = singleframe == False
-        nr_multiframe = multiframe.sum()
-        if nr_multiframe != 0: 
-            for relpath in tqdm(self.register[multiframe].index.values, desc="Converting multiframe file " + relpath):
-                filepath = os.path.join(self.path, relpath)
-                singleframe_files = dcm4che.split_multiframe(filepath) 
-                if singleframe_files != []:            
-                    # add the single frame files to the dataframe
-                    df = dbdataset.read_dataframe(singleframe_files, self.register.columns, path=self.path)
-                    df['removed'] = False
-                    df['created'] = False
-                    self.register = pd.concat([self.register, df])
-                    # delete the original multiframe 
-                    os.remove(filepath)
-                # drop the file also if the conversion has failed
-                self.register.drop(index=relpath, inplace=True)
-        self.register.drop('NumberOfFrames', axis=1, inplace=True)
-
-
-    def _split_series(self):
-        """
-        Split series with multiple SOP Classes.
-
-        If a series contain instances from different SOP Classes, 
-        these are separated out into multiple series with identical SOP Classes.
-        """
-        # For each series, check if there are multiple
-        # SOP Classes in the series and split them if yes.
-        for series in self.series():
-            series_index = register.index(self.register, series)
-            df_series = self.register.loc[series_index]
-            sop_classes = df_series.SOPClassUID.unique()
-            if len(sop_classes) > 1:
-                # For each sop_class, create a new series and move all
-                # instances of that sop_class to the new series
-                desc = series[-1] if isinstance(series, str) else series[0]
-                for i, sop_class in tqdm(enumerate(sop_classes[1:]), desc='Splitting series with multiple SOP Classes.'):
-                    df_sop_class = df_series[df_series.SOPClassUID == sop_class]
-                    relpaths = df_sop_class.index.tolist()
-                    sop_class_files = [os.path.join(self.path, p) for p in relpaths]
-                    sop_class_series = series[:-1] + [desc + f' [{i+1}]']
-                    self._files_to_series(sop_class_files, sop_class_series)
-                    # Delete original files permanently
-                    self.register.drop(relpaths)
-                    for f in sop_class_files:
-                        os.remove(f)
-        self.register.drop('SOPClassUID', axis=1, inplace=True)
 
 

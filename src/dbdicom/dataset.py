@@ -7,12 +7,11 @@ import struct
 from tqdm import tqdm
 
 import numpy as np
-import pandas as pd
 import pydicom
 from pydicom.util.codify import code_file
 import pydicom.config
-from pydicom.dataset import Dataset
 import vreg
+
 
 import dbdicom.utils.image as image
 import dbdicom.utils.variables as variables
@@ -74,6 +73,8 @@ def new_dataset(sop_class):
         return xray_angiographic_image.default()
     if sop_class == 'UltrasoundMultiFrameImage':
         return ultrasound_multiframe_image.default()
+    if sop_class == 'ParametricMap':
+        return parametric_map.default()
     else:
         raise ValueError(
             f"DICOM class {sop_class} is not currently supported"
@@ -238,7 +239,7 @@ def codify(source_file, save_file, **kwargs):
     file.close()
 
 
-def read_data(files, tags, path=None, images_only=False):
+def read_data(files, tags, path=None, images_only=False): # obsolete??
 
     if np.isscalar(files):
         files = [files]
@@ -265,34 +266,6 @@ def read_data(files, tags, path=None, images_only=False):
     return dict
 
 
-
-def read_dataframe(files, tags, path=None, images_only=False):
-    if np.isscalar(files):
-        files = [files]
-    if np.isscalar(tags):
-        tags = [tags]
-    array = []
-    dicom_files = []
-    for i, file in tqdm(enumerate(files), desc='Reading DICOM folder'):
-        try:
-            ds = pydicom.dcmread(file, force=True, specific_tags=tags+['Rows'])
-        except:
-            pass
-        else:
-            if isinstance(ds, pydicom.dataset.FileDataset):
-                if 'TransferSyntaxUID' in ds.file_meta:
-                    if images_only:
-                        if not 'Rows' in ds:
-                            continue
-                    row = get_values(ds, tags)
-                    array.append(row)
-                    if path is None:
-                        index = file
-                    else:
-                        index = os.path.relpath(file, path)
-                    dicom_files.append(index) 
-    df = pd.DataFrame(array, index = dicom_files, columns = tags)
-    return df
 
 
 def _add_new(ds, tag, value, VR='OW'):
@@ -586,7 +559,7 @@ def pixel_data(ds):
     try:
         array = ds.pixel_array
     except:
-        return None
+        raise ValueError("Dataset has no pixel data.")
     array = array.astype(np.float32)
     slope = float(getattr(ds, 'RescaleSlope', 1)) 
     intercept = float(getattr(ds, 'RescaleIntercept', 0)) 
@@ -595,7 +568,7 @@ def pixel_data(ds):
     return np.transpose(array)
 
 
-def set_pixel_data(ds, array, value_range=None):
+def set_pixel_data(ds, array):
     if array is None:
         raise ValueError('The pixel array cannot be set to an empty value.')
     
@@ -611,7 +584,7 @@ def set_pixel_data(ds, array, value_range=None):
     # if array.ndim >= 3: # remove spurious dimensions of 1
     #     array = np.squeeze(array) 
 
-    array = image.clip(array.astype(np.float32), value_range=value_range)
+    array = image.clip(array.astype(np.float32))
     array, slope, intercept = image.scale_to_range(array, ds.BitsAllocated)
     array = np.transpose(array)
 
@@ -635,6 +608,15 @@ def volume(ds, multislice=False):
 def set_volume(ds, volume:vreg.Volume3D, multislice=False):
     if volume is None:
         raise ValueError('The volume cannot be set to an empty value.')
+    try:
+        mod = SOPCLASSMODULE[ds.SOPClassUID]
+    except KeyError:
+        raise ValueError(
+            f"DICOM class {ds.SOPClassUID} is not currently supported."
+        )
+    if hasattr(mod, 'set_volume'):
+        return getattr(mod, 'set_volume')(ds, volume)
+    
     image = np.squeeze(volume.values)
     if image.ndim != 2:
         raise ValueError("Can only write 2D images to a dataset.")
