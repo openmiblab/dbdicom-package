@@ -20,6 +20,7 @@ COLUMNS = [
     'PatientName', 
     'StudyDescription', 
     'StudyDate', 
+    'StudyID',
     'SeriesDescription', 
     'SeriesNumber', 
     'InstanceNumber', 
@@ -77,6 +78,7 @@ def _multiframe_to_singleframe(path, df):
 
 def _tree(df):
     # A human-readable summary tree
+    # TODO: Add version number
 
     df.sort_values(['PatientID','StudyInstanceUID','SeriesNumber'], inplace=True)
     df = df.fillna('None')
@@ -94,10 +96,12 @@ def _tree(df):
         for uid_study in df_patient.StudyInstanceUID.unique():
             df_study = df_patient[df_patient.StudyInstanceUID == uid_study]
             study_desc = df_study.StudyDescription.values[0]
+            study_id = df_study.StudyID.values[0]
             study_date = df_study.StudyDate.values[0]
             study = {
                 'StudyDescription': study_desc,
                 'StudyDate': study_date,
+                'StudyID': study_id,
                 'StudyInstanceUID': uid_study,
                 'series': [],
             }

@@ -1,3 +1,4 @@
+from typing import Union
 
 import vreg
 
@@ -190,41 +191,36 @@ def move(from_entity:list, to_entity:list):
     dbd.close()
 
 
-def volume(series:list, dims:list=None, multislice=False) -> vreg.Volume3D:
+def volume(series:list, dims:list=None) -> vreg.Volume3D:
     """Read a vreg.Volume3D from a DICOM series
 
     Args:
         series (list): DICOM series to read
         dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
-        multislice (bool, optional): Whether the data are to be read 
-            as multislice or not. In multislice data the voxel size 
-            is taken from the slice gap rather thsan the slice thickness. Defaults to False.
 
     Returns:
         vreg.Volume3D: vole read from the series.
     """
+    if isinstance(series, str):
+        series = [series]
     dbd = open(series[0])
-    vol = dbd.volume(series, dims, multislice)
+    vol = dbd.volume(series, dims)
     dbd.close()
     return vol
 
-def write_volume(vol:vreg.Volume3D, series:list, ref:list=None, 
-                 multislice=False):
+def write_volume(vol:Union[vreg.Volume3D, tuple], series:list, ref:list=None):
     """Write a vreg.Volume3D to a DICOM series
 
     Args:
-        vol (vreg.Volume3D): Volume to write to the series.
+        vol (vreg.Volume3D or tuple): Volume to write to the series.
         series (list): DICOM series to read
         dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
-        multislice (bool, optional): Whether the data are to be read 
-            as multislice or not. In multislice data the voxel size 
-            is taken from the slice gap rather thsan the slice thickness. Defaults to False.
     """
     dbd = open(series[0])
-    dbd.write_volume(vol, series, ref, multislice)
+    dbd.write_volume(vol, series, ref)
     dbd.close()
 
-def to_nifti(series:list, file:str, dims:list=None, multislice=False):
+def to_nifti(series:list, file:str, dims:list=None):
     """Save a DICOM series in nifti format.
 
     Args:
@@ -232,27 +228,21 @@ def to_nifti(series:list, file:str, dims:list=None, multislice=False):
         file (str): file path of the nifti file.
         dims (list, optional): Non-spatial dimensions of the volume. 
             Defaults to None.
-        multislice (bool, optional): Whether the data are to be read 
-            as multislice or not. In multislice data the voxel size 
-            is taken from the slice gap rather thaan the slice thickness. Defaults to False.
     """
     dbd = open(series[0])
-    dbd.to_nifti(series, file, dims, multislice)
+    dbd.to_nifti(series, file, dims)
     dbd.close()
 
-def from_nifti(file:str, series:list, ref:list=None, multislice=False):
+def from_nifti(file:str, series:list, ref:list=None):
     """Create a DICOM series from a nifti file.
 
     Args:
         file (str): file path of the nifti file.
         series (list): DICOM series to create
         ref (list): DICOM series to use as template.
-        multislice (bool, optional): Whether the data are to be written
-            as multislice or not. In multislice data the voxel size 
-            is written in the slice gap rather thaan the slice thickness. Defaults to False.
     """
     dbd = open(series[0])
-    dbd.from_nifti(file, series, ref, multislice)
+    dbd.from_nifti(file, series, ref)
     dbd.close()
 
 def pixel_data(series:list, dims:list=None, include:list=None) -> tuple:
@@ -270,6 +260,8 @@ def pixel_data(series:list, dims:list=None, include:list=None) -> tuple:
             is provide these are returned as a dictionary in a third 
             return value.
     """
+    if isinstance(series, str):
+        series = [series]
     dbd = open(series[0])
     array = dbd.pixel_data(series, dims, include)
     dbd.close()
