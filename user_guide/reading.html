@@ -1,0 +1,712 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Browsing a DICOM folder &#8212; dbdicom 0.3.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/teams.css?v=dbae51d5" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-DV3VWS9FBN"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-DV3VWS9FBN');
+            </script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-DV3VWS9FBN');
+            </script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/reading';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Creating and modifying DICOM files" href="writing.html" />
+    <link rel="prev" title="User guide" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/dbd.png" class="logo__image only-light" alt="dbdicom 0.3.1 documentation - Home"/>
+    <img src="../_static/dbd.png" class="logo__image only-dark pst-js-only" alt="dbdicom 0.3.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../releases/index.html">
+    Releases
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openmiblab/dbdicom" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../releases/index.html">
+    Releases
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openmiblab/dbdicom" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Basic usage</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Browsing a DICOM folder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="writing.html">Creating and modifying DICOM files</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Browsing a DICOM folder</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="browsing-a-dicom-folder">
+<h1>Browsing a DICOM folder<a class="headerlink" href="#browsing-a-dicom-folder" title="Link to this heading">#</a></h1>
+<section id="reading-and-opening-a-dicom-database">
+<h2>Reading and opening a DICOM database<a class="headerlink" href="#reading-and-opening-a-dicom-database" title="Link to this heading">#</a></h2>
+<p>Open a DICOM database in a given folder, and print a summary of the content:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">db</span>
+
+<span class="n">database</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">database</span><span class="p">(</span><span class="s1">&#39;C:</span><span class="se">\\</span><span class="s1">Users</span><span class="se">\\</span><span class="s1">MyName</span><span class="se">\\</span><span class="s1">MyData</span><span class="se">\\</span><span class="s1">DICOMtestData&#39;</span><span class="p">)</span>
+<span class="n">database</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The first time the database is opened this will be relatively slow because all files need to be read and summarized. If the folder is reopened again later, the table can be read directly and opening will be much faster.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">scan()</span></code> to force a rereading of the database. This may be of use when files have become corrupted, or have been removed/modified by external applications:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">database</span><span class="o">.</span><span class="n">scan</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>After making changes to the DICOM data, the folder should be closed
+properly so any changes can be either saved or rolled back as needed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">database</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If unsaved changes exist, <code class="docutils literal notranslate"><span class="pre">close()</span></code> will prompt the user to either save or restore to the last saved state.</p>
+</section>
+<section id="retrieving-objects-from-the-folder">
+<h2>Retrieving objects from the folder<a class="headerlink" href="#retrieving-objects-from-the-folder" title="Link to this heading">#</a></h2>
+<p>A DICOM database has a hierarchical structure.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>database
+├── Patient 1
+│   ├── Study 1
+│   │   ├── Series 1
+│   │   ├── ...
+│   │   └── Series n
+│   │── Study 2
+│   ├── ...
+│   └── Study n
+├── Patient 2
+├── ...
+└── Patient n
+</pre></div>
+</div>
+<p>A <em>patient</em> can be an actual patient but can also be a healthy volunteer, an animal, a physical reference object, or a digital reference object. Typically a <em>study</em> consist of all the data derived in a single examination of a subject. A <em>series</em> usually represents and individual examination in a study, such an MR sequence. The files contain the data and are <em>instances</em> of real-world objects such as images or regions-of-interest.</p>
+<p>To return a list of all patients, studies or series in the folder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">series</span><span class="p">()</span>
+<span class="n">studies</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">studies</span><span class="p">()</span>
+<span class="n">patients</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">patients</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The same functions can be used to retrieve the children of a certain parent object. For instance, to get all studies of a patient:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">studies</span> <span class="o">=</span> <span class="n">patient</span><span class="o">.</span><span class="n">studies</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Or all series under the first of those studies:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">studies</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">series</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And so on for all other levels in the hierarchy. These functions also work to find objects higher up in the hierarchy. For instance, to find the patient of a given series:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">patient</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">patients</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this case the function will return a single item.</p>
+</section>
+<section id="finding-dicom-objects-in-the-folder">
+<h2>Finding DICOM objects in the folder<a class="headerlink" href="#finding-dicom-objects-in-the-folder" title="Link to this heading">#</a></h2>
+<p>Each DICOM file has a number of attributes describing the properties of the object. Examples are PatientName, StudyDate, etc. A convenient list of attributes for specific objects can be found <a class="reference external" href="https://dicom.innolitics.com/">here</a>.</p>
+<p>Each known attribute is identified most easily by a keyword, which has a capitalised notation. Objects in the folder can be can also be listed by searching on any DICOM tag:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">PatientName</span> <span class="o">=</span> <span class="s1">&#39;John Dory&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will only return the series for patient John Dory. This also works with multiple DICOM tags:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">series</span><span class="p">(</span>
+    <span class="n">PatientName</span> <span class="o">=</span> <span class="s1">&#39;John Dory&#39;</span><span class="p">,</span>
+    <span class="n">ReferringPhysicianName</span> <span class="o">=</span> <span class="s1">&#39;Dr. No&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case objects are only returned if both conditions are fullfilled. Any arbitrary number of conditions can be entered, and higher order objects can be found in the same way:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">studies</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span>
+    <span class="n">PatientName</span> <span class="o">=</span> <span class="s1">&#39;John Dory&#39;</span><span class="p">,</span>
+    <span class="n">ReferringPhysicianName</span> <span class="o">=</span> <span class="s1">&#39;Dr. No&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>As an alternative to calling explicit object types, you can call <code class="docutils literal notranslate"><span class="pre">children()</span></code> and <code class="docutils literal notranslate"><span class="pre">parent</span></code> to move through the hierarchy:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">studies</span> <span class="o">=</span> <span class="n">patient</span><span class="o">.</span><span class="n">children</span><span class="p">()</span>
+<span class="n">patient</span> <span class="o">=</span> <span class="n">studies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">parent</span>
+</pre></div>
+</div>
+<p>The same convenience functions are available, such as searching by keywords:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">studies</span> <span class="o">=</span> <span class="n">patient</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="n">ReferringPhysicianName</span> <span class="o">=</span> <span class="s1">&#39;Dr. No&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="moving-and-removing-objects">
+<h2>Moving and removing objects<a class="headerlink" href="#moving-and-removing-objects" title="Link to this heading">#</a></h2>
+<p>To remove an object from the folder, call <code class="docutils literal notranslate"><span class="pre">remove()</span></code> on the object:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+<span class="n">series</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">remove()</span></code> can  be called on Patient, Study or Series.</p>
+<p>Moving an object to another parent can be done with <code class="docutils literal notranslate"><span class="pre">move_to()</span></code>. For instance to move a study from one patient to another:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">patients</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">studies</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">new_parent</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">patients</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">study</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="copying-and-creating-objects">
+<h2>Copying and creating objects<a class="headerlink" href="#copying-and-creating-objects" title="Link to this heading">#</a></h2>
+<p>Any object can be copied by calling <code class="docutils literal notranslate"><span class="pre">copy()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">patients</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">studies</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">new_study</span> <span class="o">=</span> <span class="n">study</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This will create a copy of the object in the same parent object, i.e. <code class="docutils literal notranslate"><span class="pre">study.copy()</span></code> in the example above has created a new study in patient 0. This can be used for instance to copy-paste a study from one patient to another:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">patients</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">studies</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">new_parent</span> <span class="o">=</span> <span class="n">folder</span><span class="o">.</span><span class="n">patients</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">study</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is equivalent to using <code class="docutils literal notranslate"><span class="pre">copy_to()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span><span class="o">.</span><span class="n">copy_to</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Instead of copying, and object can also be moved:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">new_parent</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To create a new object, call <code class="docutils literal notranslate"><span class="pre">new_child()</span></code> on the parent:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">study</span><span class="o">.</span><span class="n">new_child</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><em>series</em> will now be a new (empty) series under <em>study</em>. This can also be written more explicitly for clarity:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span> <span class="o">=</span> <span class="n">study</span><span class="o">.</span><span class="n">new_series</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>And equivalently for <code class="docutils literal notranslate"><span class="pre">new_patient</span></code> and <code class="docutils literal notranslate"><span class="pre">new_study</span></code>. New sibling objects under the same parent can be created by:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_series</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">new_sibling</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>here <code class="docutils literal notranslate"><span class="pre">new_series</span></code> will be a series under the same study as <code class="docutils literal notranslate"><span class="pre">series</span></code>. Objects higher up the hierarchy can be created using <code class="docutils literal notranslate"><span class="pre">new_pibling</span></code> (i.e. sibling of the parent):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_study</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">new_pibling</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>This is shorthand for:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_study</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span><span class="o">.</span><span class="n">new_sibling</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>When new objects are created, they can be assigned properties up front, for instance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">new_study</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">new_pibling</span><span class="p">(</span>
+    <span class="n">StudyDescription</span><span class="o">=</span><span class="s1">&#39;Parametric maps&#39;</span><span class="p">,</span>
+    <span class="n">StudyDate</span> <span class="o">=</span> <span class="s1">&#39;12.12.22&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will ensure that all data that appear under the new study will have these attributes.</p>
+</section>
+<section id="export-and-import">
+<h2>Export and import<a class="headerlink" href="#export-and-import" title="Link to this heading">#</a></h2>
+<p>To import DICOM files from an external folder, call <code class="docutils literal notranslate"><span class="pre">import_dicom()</span></code> on a database with a list of files:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">database</span><span class="o">.</span><span class="n">import_dicom</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To export dicom datasets out of the folder to an external folder, call <code class="docutils literal notranslate"><span class="pre">export_as_dicom()</span></code> on any dicom object with the export path as argument:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span><span class="o">.</span><span class="n">export_as_dicom</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Exporting in other formats is similar:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">study</span><span class="o">.</span><span class="n">export_as_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">study</span><span class="o">.</span><span class="n">export_as_nifti</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">study</span><span class="o">.</span><span class="n">export_as_png</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The pixel data from a series can also be exported in numpy format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span><span class="o">.</span><span class="n">export_as_npy</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This exports the array in dimensions <code class="docutils literal notranslate"><span class="pre">(x,y,n)</span></code> where <code class="docutils literal notranslate"><span class="pre">n</span></code> enumerates the images and <code class="docutils literal notranslate"><span class="pre">x,y</span></code> are the pixels. To export in different dimensions use the <code class="docutils literal notranslate"><span class="pre">sortby</span></code> keyword with one or more DICOM tags:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">series</span><span class="o">.</span><span class="n">export_as_npy</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">sortby</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;SliceLocation&#39;</span><span class="p">,</span><span class="s1">&#39;AcquisitionTime&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This exports an array with dimensions <code class="docutils literal notranslate"><span class="pre">(x,y,z,t,n)</span></code> sorted by slice location and acquisition time.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">User guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="writing.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Creating and modifying DICOM files</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-and-opening-a-dicom-database">Reading and opening a DICOM database</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#retrieving-objects-from-the-folder">Retrieving objects from the folder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-dicom-objects-in-the-folder">Finding DICOM objects in the folder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#moving-and-removing-objects">Moving and removing objects</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#copying-and-creating-objects">Copying and creating objects</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#export-and-import">Export and import</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_guide/reading.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022-2025, miblab.org.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

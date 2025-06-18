@@ -1,0 +1,1268 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dbdicom.dbd &#8212; dbdicom 0.3.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/teams.css?v=dbae51d5" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=4621528c"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://www.googletagmanager.com/gtag/js?id=G-DV3VWS9FBN"></script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-DV3VWS9FBN');
+            </script>
+    <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', 'G-DV3VWS9FBN');
+            </script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/dbdicom/dbd';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/dbd.png" class="logo__image only-light" alt="dbdicom 0.3.1 documentation - Home"/>
+    <img src="../../_static/dbd.png" class="logo__image only-dark pst-js-only" alt="dbdicom 0.3.1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../releases/index.html">
+    Releases
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openmiblab/dbdicom" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    Reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../releases/index.html">
+    Releases
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../about/index.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/openmiblab/dbdicom" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">dbdicom.dbd</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for dbdicom.dbd</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">vreg</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydicom.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom.utils.arrays</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom.dataset</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dbdataset</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom.database</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">dbdatabase</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom.register</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">register</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dbdicom.const</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">const</span>
+
+
+
+<div class="viewcode-block" id="DataBaseDicom">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DataBaseDicom</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to read and write a DICOM folder.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path (str): path to the DICOM folder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_file</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">register</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="c1"># If the file is corrupted, delete it and load again</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="DataBaseDicom.read">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.read">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the DICOM folder again</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span> <span class="o">=</span> <span class="n">dbdatabase</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="c1"># For now ensure all series have just a single CIOD</span>
+        <span class="c1"># Leaving this out for now until the issue occurs again</span>
+        <span class="c1"># self._split_series()</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    
+
+<div class="viewcode-block" id="DataBaseDicom.delete">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.delete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete a DICOM entity from the database</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity (list): entity to delete</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">removed</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
+        <span class="c1"># delete datasets marked for removal</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">removed</span><span class="o">.</span><span class="n">tolist</span><span class="p">():</span>
+            <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span> 
+                <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="c1"># and drop then from the register</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">removed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    
+
+<div class="viewcode-block" id="DataBaseDicom.close">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.close">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> 
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the DICOM folder</span>
+<span class="sd">        </span>
+<span class="sd">        This also saves changes in the header file to disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Save df as pkl</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_register_file</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;dbtree.json&#39;</span><span class="p">)</span> 
+    
+
+<div class="viewcode-block" id="DataBaseDicom.summary">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a summary of the contents of the database.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Nested dictionary with summary information on the database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">register</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">)</span></div>
+
+    
+
+<div class="viewcode-block" id="DataBaseDicom.print">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.print">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print the contents of the DICOM folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">register</span><span class="o">.</span><span class="n">print_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.patients">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.patients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">patients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of patients in the DICOM folder.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            name (str, optional): value of PatientName, to search for </span>
+<span class="sd">                individuals with a given name. Defaults to None.</span>
+<span class="sd">            contains (str, optional): substring of PatientName, to </span>
+<span class="sd">                search for individuals based on part of their name. </span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            isin (list, optional): List of PatientName values, to search </span>
+<span class="sd">                for patients whose name is in the list. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: list of patients fulfilling the criteria.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">register</span><span class="o">.</span><span class="n">patients</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.studies">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.studies">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">studies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of studies in the DICOM folder.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity (str or list): path to a DICOM folder (to search in </span>
+<span class="sd">                the whole folder), or a two-element list identifying a </span>
+<span class="sd">                patient (to search studies of a given patient).</span>
+<span class="sd">            name (str, optional): value of StudyDescription, to search for </span>
+<span class="sd">                studies with a given description. Defaults to None.</span>
+<span class="sd">            contains (str, optional): substring of StudyDescription, to </span>
+<span class="sd">                search for studies based on part of their description. </span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            isin (list, optional): List of StudyDescription values, to search </span>
+<span class="sd">                for studies whose description is in a list. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: list of studies fulfilling the criteria.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">studies</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">patient</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">patients</span><span class="p">():</span>
+                <span class="n">studies</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="n">patient</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">studies</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">studies</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">patient</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">patients</span><span class="p">():</span>
+                <span class="n">studies</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="n">patient</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">studies</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">register</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.series">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.series">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">contains</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">isin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of series in the DICOM folder.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity (str or list): path to a DICOM folder (to search in </span>
+<span class="sd">                the whole folder), or a list identifying a </span>
+<span class="sd">                patient or a study (to search series of a given patient </span>
+<span class="sd">                or study).</span>
+<span class="sd">            name (str, optional): value of SeriesDescription, to search for </span>
+<span class="sd">                series with a given description. Defaults to None.</span>
+<span class="sd">            contains (str, optional): substring of SeriesDescription, to </span>
+<span class="sd">                search for series based on part of their description. </span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">            isin (list, optional): List of SeriesDescription values, to search </span>
+<span class="sd">                for series whose description is in a list. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list: list of series fulfilling the criteria.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">entity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">study</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+                <span class="n">series</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">study</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">series</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">study</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+                <span class="n">series</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">study</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">series</span>            
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">study</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="n">entity</span><span class="p">):</span>
+                <span class="n">series</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">study</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">series</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># path = None (all series) or path = patient (all series in patient)</span>
+            <span class="k">return</span> <span class="n">register</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">contains</span><span class="p">,</span> <span class="n">isin</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="DataBaseDicom.volume">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.volume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">vreg</span><span class="o">.</span><span class="n">Volume3D</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read a vreg.Volume3D from a DICOM series</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            series (list): DICOM series to read</span>
+<span class="sd">            dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            vreg.Volume3D: vole read from the series.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="c1"># path to folder</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">series</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span> <span class="c1"># folder, patient or study</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">series</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">dims</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SliceLocation&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dims</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">series</span><span class="p">)</span>
+        
+        <span class="c1"># Read dicom files</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">volumes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Reading volume..&#39;</span><span class="p">):</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">dims</span><span class="p">))</span>
+            <span class="n">volumes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dbdataset</span><span class="o">.</span><span class="n">volume</span><span class="p">(</span><span class="n">ds</span><span class="p">))</span>
+
+        <span class="c1"># Format as mesh</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">coords</span><span class="p">,</span> <span class="n">inds</span> <span class="o">=</span> <span class="n">dbdicom</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">meshvals</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
+        <span class="n">vols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">volumes</span><span class="p">)</span>
+        <span class="n">vols</span> <span class="o">=</span> <span class="n">vols</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+        <span class="c1"># Check that all slices have the same coordinates</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="mi">0</span><span class="p">,</span><span class="o">...</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">],</span> <span class="n">c0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot build a single volume. Not all slices &quot;</span>
+                    <span class="s2">&quot;have the same coordinates. </span><span class="se">\n</span><span class="s2">If you set &quot;</span> 
+                    <span class="s2">&quot;firstslice=True, the coordinates of the lowest &quot;</span>
+                    <span class="s2">&quot;slice will be assigned to the whole volume.&quot;</span>     
+                <span class="p">)</span>
+            
+        <span class="c1"># Infer spacing between slices from slice locations</span>
+        <span class="c1"># Technically only necessary if SpacingBetweenSlices not set or incorrect</span>
+        <span class="n">vols</span> <span class="o">=</span> <span class="n">infer_slice_spacing</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span>
+
+        <span class="c1"># Join 2D volumes into 3D volumes</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vol</span> <span class="o">=</span> <span class="n">vreg</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># some vendors define the slice vector as -cross product </span>
+            <span class="c1"># of row and column vector. Check if that solves the issue.</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vols</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+                <span class="c1"># Then try again</span>
+            <span class="n">vol</span> <span class="o">=</span> <span class="n">vreg</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">vols</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vol</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">vol</span><span class="o">.</span><span class="n">set_coords</span><span class="p">(</span><span class="n">c0</span><span class="p">)</span>
+            <span class="n">vol</span><span class="o">.</span><span class="n">set_dims</span><span class="p">(</span><span class="n">dims</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">vol</span></div>
+
+
+    
+<div class="viewcode-block" id="DataBaseDicom.write_volume">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.write_volume">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_volume</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">vol</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="n">vreg</span><span class="o">.</span><span class="n">Volume3D</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span> <span class="n">series</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> 
+            <span class="n">ref</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+        <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a vreg.Volume3D to a DICOM series</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            vol (vreg.Volume3D): Volume to write to the series.</span>
+<span class="sd">            series (list): DICOM series to read</span>
+<span class="sd">            ref (list): Reference series</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vol</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">vol</span> <span class="o">=</span> <span class="n">vreg</span><span class="o">.</span><span class="n">volume</span><span class="p">(</span><span class="n">vol</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vol</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">new_dataset</span><span class="p">(</span><span class="s1">&#39;MRImage&#39;</span><span class="p">)</span>
+            <span class="c1">#ds = dbdataset.new_dataset(&#39;ParametricMap&#39;)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ref</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">series</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">ref_mgr</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ref_mgr</span> <span class="o">=</span> <span class="n">DataBaseDicom</span><span class="p">(</span><span class="n">ref</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="n">ref_mgr</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> 
+
+        <span class="c1"># Get the attributes of the destination series</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">(</span><span class="n">series</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_instance_number</span><span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;SeriesInstanceUID&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">vol</span><span class="o">.</span><span class="n">ndim</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+            <span class="n">slices</span> <span class="o">=</span> <span class="n">vol</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sl</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">slices</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Writing volume..&#39;</span><span class="p">):</span>
+                <span class="n">dbdataset</span><span class="o">.</span><span class="n">set_volume</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sl</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+            <span class="n">vols</span> <span class="o">=</span> <span class="n">vol</span><span class="o">.</span><span class="n">separate</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">vt</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">vols</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Writing volume..&#39;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">sl</span> <span class="ow">in</span> <span class="n">vt</span><span class="o">.</span><span class="n">split</span><span class="p">():</span>
+                    <span class="n">dbdataset</span><span class="o">.</span><span class="n">set_volume</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sl</span><span class="p">)</span>
+                    <span class="n">dbdataset</span><span class="o">.</span><span class="n">set_value</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span> <span class="n">sl</span><span class="o">.</span><span class="n">coords</span><span class="p">[:,</span><span class="o">...</span><span class="p">])</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+                    <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
+<div class="viewcode-block" id="DataBaseDicom.to_nifti">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.to_nifti">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_nifti</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save a DICOM series in nifti format.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            series (list): DICOM series to read</span>
+<span class="sd">            file (str): file path of the nifti file.</span>
+<span class="sd">            dims (list, optional): Non-spatial dimensions of the volume. </span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="n">dims</span><span class="p">)</span>
+        <span class="n">vreg</span><span class="o">.</span><span class="n">write_nifti</span><span class="p">(</span><span class="n">vol</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="DataBaseDicom.from_nifti">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.from_nifti">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_nifti</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a DICOM series from a nifti file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file (str): file path of the nifti file.</span>
+<span class="sd">            series (list): DICOM series to create</span>
+<span class="sd">            ref (list): DICOM series to use as template.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">vol</span> <span class="o">=</span> <span class="n">vreg</span><span class="o">.</span><span class="n">read_nifti</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">write_volume</span><span class="p">(</span><span class="n">vol</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.pixel_data">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.pixel_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">pixel_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span><span class="nb">list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the pixel data from a DICOM series</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            series (list or str): DICOM series to read. This can also </span>
+<span class="sd">                be a path to a folder containing DICOM files, or a </span>
+<span class="sd">                patient or study to read all series in that patient or </span>
+<span class="sd">                study. In those cases a list is returned.</span>
+<span class="sd">            dims (list, optional): Dimensions of the array.</span>
+<span class="sd">            coords (bool): If set to Trye, the coordinates of the </span>
+<span class="sd">                arrays are returned alongside the pixel data</span>
+<span class="sd">            include (list, optional): list of DICOM attributes that are </span>
+<span class="sd">                read on the fly to avoid reading the data twice.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            numpy.ndarray or tuple: numpy array with pixel values, with </span>
+<span class="sd">                at least 3 dimensions (x,y,z). If </span>
+<span class="sd">                coords is set these are returned too as an array with </span>
+<span class="sd">                coordinates of the slices according to dims. If include </span>
+<span class="sd">                is provide the values are returned as a dictionary in the last </span>
+<span class="sd">                return value. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">series</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span> <span class="c1"># path to folder</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_data</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">series</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">series</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span> <span class="c1"># folder, patient or study</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_data</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">include</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">series</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">coords</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Coordinates can only be returned if dimensions are specified.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dims</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">dims</span><span class="p">):</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">dims</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+        <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SliceLocation&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dims</span>
+
+        <span class="c1"># Ensure return_vals is a list</span>
+        <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">include</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">[</span><span class="n">include</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">include</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">series</span><span class="p">)</span>
+        
+        <span class="c1"># Read dicom files</span>
+        <span class="n">coords_array</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Reading pixel data..&#39;</span><span class="p">):</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  
+            <span class="n">coords_array</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">dims</span><span class="p">))</span>
+            <span class="c1"># save as dict so numpy does not stack as arrays</span>
+            <span class="n">arrays</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;pixel_data&#39;</span><span class="p">:</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">pixel_data</span><span class="p">(</span><span class="n">ds</span><span class="p">)}</span>
+            <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;values&#39;</span><span class="p">:</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">params</span><span class="p">)}</span>
+
+        <span class="c1"># Format as mesh</span>
+        <span class="n">coords_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">coords_array</span><span class="p">],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">coords_array</span><span class="p">,</span> <span class="n">inds</span> <span class="o">=</span> <span class="n">dbdicom</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">arrays</span><span class="o">.</span><span class="n">meshvals</span><span class="p">(</span><span class="n">coords_array</span><span class="p">)</span>
+
+        <span class="n">arrays</span> <span class="o">=</span> <span class="n">arrays</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coords_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="s1">&#39;pixel_data&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">arrays</span> <span class="o">=</span> <span class="n">arrays</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">arrays</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">coords_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">include</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">coords</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arrays</span><span class="p">,</span> <span class="n">coords_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="o">...</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arrays</span>
+        
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">coords_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">a</span><span class="p">[</span><span class="s1">&#39;values&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">),</span> <span class="p">)</span> <span class="o">+</span> <span class="n">coords_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+        <span class="k">if</span> <span class="n">coords</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arrays</span><span class="p">,</span> <span class="n">coords_array</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span><span class="o">...</span><span class="p">],</span> <span class="n">values</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">arrays</span><span class="p">,</span> <span class="n">values</span></div>
+
+    
+    
+<div class="viewcode-block" id="DataBaseDicom.unique">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.unique">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">unique</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pars</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span><span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a list of unique values for a DICOM entity</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            pars (list): attributes to return.</span>
+<span class="sd">            entity (list): DICOM entity to search (Patient, Study or Series)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: dictionary with unique values for each attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">pars</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
+
+        <span class="c1"># Return a list with unique values for each attribute</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span><span class="n">a</span><span class="p">]</span>
+            <span class="c1"># Remove None values</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="n">va</span><span class="p">[[</span><span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">va</span><span class="p">]]</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">va</span><span class="p">)</span>
+            <span class="c1"># Get unique values and sort</span>
+            <span class="n">va</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">va</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="n">va</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">va</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">va</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">va</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">va</span> <span class="o">=</span> <span class="n">va</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span> 
+                    <span class="n">va</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">va</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">p</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pars</span><span class="p">)}</span> </div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.copy">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy a DICOM  entity (patient, study or series)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            from_entity (list): entity to copy</span>
+<span class="sd">            to_entity (list): entity after copying.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_entity</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_entity</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot copy series </span><span class="si">{</span><span class="n">from_entity</span><span class="si">}</span><span class="s2"> to series </span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2"> is not a series (needs 4 elements).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_series</span><span class="p">(</span><span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_entity</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_entity</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot copy study </span><span class="si">{</span><span class="n">from_entity</span><span class="si">}</span><span class="s2"> to study </span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2"> is not a study (needs 3 elements).&quot;</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_study</span><span class="p">(</span><span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_entity</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_entity</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot copy patient </span><span class="si">{</span><span class="n">from_entity</span><span class="si">}</span><span class="s2"> to patient </span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2">. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2"> is not a patient (needs 2 elements).&quot;</span>
+                <span class="p">)</span>                
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_patient</span><span class="p">(</span><span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Cannot copy </span><span class="si">{</span><span class="n">from_entity</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">to_entity</span><span class="si">}</span><span class="s2">. &quot;</span>
+        <span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="DataBaseDicom.move">
+<a class="viewcode-back" href="../../api/dbdicom.DataBaseDicom.html#dbdicom.DataBaseDicom.move">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Move a DICOM entity</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity (list): entity to move</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">from_entity</span><span class="p">,</span> <span class="n">to_entity</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">from_entity</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span><span class="p">:</span><span class="nb">list</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span><span class="nb">list</span><span class="p">):</span>
+        <span class="c1"># Create a np array v with values for each instance and attribute</span>
+        <span class="c1"># if set(attributes) &lt;= set(dbdatabase.COLUMNS):</span>
+        <span class="c1">#     index = register.index(self.register, entity)</span>
+        <span class="c1">#     v = self.register.loc[index, attributes].values</span>
+        <span class="c1"># else:</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">entity</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">attributes</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_patient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_patient</span><span class="p">,</span> <span class="n">to_patient</span><span class="p">):</span>
+        <span class="n">from_patient_studies</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">studies</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">from_patient</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">from_study</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">from_patient_studies</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Copying patient </span><span class="si">{</span><span class="n">from_patient</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">to_patient</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">from_patient</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">to_study</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">to_patient</span><span class="p">,</span> <span class="n">from_study</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mgr</span> <span class="o">=</span> <span class="n">DataBaseDicom</span><span class="p">(</span><span class="n">to_study</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">to_study</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mgr</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">to_patient</span><span class="p">,</span> <span class="n">from_study</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>                
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_study</span><span class="p">(</span><span class="n">from_study</span><span class="p">,</span> <span class="n">to_study</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_study</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_study</span><span class="p">,</span> <span class="n">to_study</span><span class="p">):</span>
+        <span class="n">from_study_series</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">from_study</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">from_series</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">from_study_series</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Copying study </span><span class="si">{</span><span class="n">from_study</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">to_study</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="n">from_study</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">to_series</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">to_study</span><span class="p">,</span> <span class="n">from_series</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mgr</span> <span class="o">=</span> <span class="n">DataBaseDicom</span><span class="p">(</span><span class="n">to_study</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">to_series</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mgr</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">to_study</span><span class="p">,</span> <span class="n">from_series</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_copy_series</span><span class="p">(</span><span class="n">from_series</span><span class="p">,</span> <span class="n">to_series</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_copy_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_series</span><span class="p">,</span> <span class="n">to_series</span><span class="p">):</span>
+        <span class="c1"># Get the files to be exported</span>
+        <span class="n">from_series_files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">from_series</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">to_series</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">from_series</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># Copy in the same database</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_files_to_series</span><span class="p">(</span><span class="n">from_series_files</span><span class="p">,</span> <span class="n">to_series</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Copy to another database</span>
+            <span class="n">mgr</span> <span class="o">=</span> <span class="n">DataBaseDicom</span><span class="p">(</span><span class="n">to_series</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">mgr</span><span class="o">.</span><span class="n">_files_to_series</span><span class="p">(</span><span class="n">from_series_files</span><span class="p">,</span> <span class="n">to_series</span><span class="p">)</span>
+            <span class="n">mgr</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_files_to_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">files</span><span class="p">,</span> <span class="n">to_series</span><span class="p">):</span>
+
+        <span class="c1"># Get the attributes of the destination series</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_attributes</span><span class="p">(</span><span class="n">to_series</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_instance_number</span><span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;SeriesInstanceUID&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Copy the files to the new series </span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Copying series </span><span class="si">{</span><span class="n">to_series</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="c1"># Read dataset and assign new properties</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataset</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_max_study_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patient_id</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pt</span><span class="p">[</span><span class="s1">&#39;PatientID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">patient_id</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="s1">&#39;StudyID&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">pt</span><span class="p">[</span><span class="s1">&#39;studies&#39;</span><span class="p">]]</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_max_series_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">study_uid</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">pt</span><span class="p">[</span><span class="s1">&#39;studies&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;StudyInstanceUID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">study_uid</span><span class="p">:</span>
+                    <span class="n">n</span> <span class="o">=</span> <span class="p">[</span><span class="n">sr</span><span class="p">[</span><span class="s1">&#39;SeriesNumber&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">sr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;series&#39;</span><span class="p">]]</span>
+                    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_max_instance_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series_uid</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">pt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">pt</span><span class="p">[</span><span class="s1">&#39;studies&#39;</span><span class="p">]:</span>
+                <span class="k">for</span> <span class="n">sr</span> <span class="ow">in</span> <span class="n">st</span><span class="p">[</span><span class="s1">&#39;series&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">sr</span><span class="p">[</span><span class="s1">&#39;SeriesInstanceUID&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">series_uid</span><span class="p">:</span>
+                        <span class="n">n</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sr</span><span class="p">[</span><span class="s1">&#39;instances&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">n</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_series_attributes</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_study_attributes</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patient_attributes</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>       
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_patient_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patient</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the patient exists and has files, read from file</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">patient</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">PATIENT_MODULE</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># If the patient does not exist, generate values</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PatientID&#39;</span><span class="p">,</span> <span class="s1">&#39;PatientName&#39;</span><span class="p">]</span>
+            <span class="c1">#patient_id = dbdataset.new_uid()</span>
+            <span class="n">patient_id</span> <span class="o">=</span> <span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">patient_name</span> <span class="o">=</span> <span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">patient</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">patient_id</span><span class="p">,</span> <span class="n">patient_name</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">attr</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span> <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_study_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">study</span><span class="p">):</span>
+        <span class="n">patient_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patient_attributes</span><span class="p">(</span><span class="n">study</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the study exists and has files, read from file</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">study</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">STUDY_MODULE</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># If the study does not exist or is empty, generate values</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">patient_id</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">study</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">study_id</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">study_id</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_study_id</span><span class="p">(</span><span class="n">patient_id</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;StudyInstanceUID&#39;</span><span class="p">,</span> <span class="s1">&#39;StudyDescription&#39;</span><span class="p">,</span> <span class="s1">&#39;StudyDate&#39;</span><span class="p">,</span> <span class="s1">&#39;StudyID&#39;</span><span class="p">]</span>
+            <span class="n">study_uid</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">new_uid</span><span class="p">()</span>
+            <span class="n">study_desc</span> <span class="o">=</span> <span class="n">study</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">study</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">study</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">study_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y%m</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">study_uid</span><span class="p">,</span> <span class="n">study_desc</span><span class="p">,</span> <span class="n">study_date</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">study_id</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">patient_attr</span> <span class="o">|</span> <span class="p">{</span><span class="n">attr</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span> <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_series_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
+        <span class="n">study_attr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_study_attributes</span><span class="p">(</span><span class="n">series</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the series exists and has files, read from file</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">series</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">const</span><span class="o">.</span><span class="n">SERIES_MODULE</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">read_dataset</span><span class="p">(</span><span class="n">files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">get_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="c1"># If the series does not exist or is empty, generate values</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">study_uid</span> <span class="o">=</span> <span class="n">register</span><span class="o">.</span><span class="n">uid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">series</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">series_number</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">series_number</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_max_series_number</span><span class="p">(</span><span class="n">study_uid</span><span class="p">)</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SeriesInstanceUID&#39;</span><span class="p">,</span> <span class="s1">&#39;SeriesDescription&#39;</span><span class="p">,</span> <span class="s1">&#39;SeriesNumber&#39;</span><span class="p">]</span>
+            <span class="n">series_uid</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">new_uid</span><span class="p">()</span>
+            <span class="n">series_desc</span> <span class="o">=</span> <span class="n">series</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">series</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">series</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">series_uid</span><span class="p">,</span> <span class="n">series_desc</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">series_number</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">study_attr</span> <span class="o">|</span> <span class="p">{</span><span class="n">attr</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span> <span class="k">if</span> <span class="n">vals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+
+        
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ds</span><span class="p">:</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">attr</span><span class="p">:</span><span class="nb">dict</span><span class="p">,</span> <span class="n">instance_nr</span><span class="p">:</span><span class="nb">int</span><span class="p">):</span>
+        <span class="c1"># Set new attributes </span>
+        <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;SOPInstanceUID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">new_uid</span><span class="p">()</span>
+        <span class="n">attr</span><span class="p">[</span><span class="s1">&#39;InstanceNumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">instance_nr</span><span class="p">)</span>
+        <span class="n">dbdataset</span><span class="o">.</span><span class="n">set_values</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="nb">list</span><span class="p">(</span><span class="n">attr</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="c1"># Save results in a new file</span>
+        <span class="n">rel_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;patient_</span><span class="si">{</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;PatientID&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> 
+            <span class="sa">f</span><span class="s2">&quot;study_[</span><span class="si">{</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;StudyID&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]_</span><span class="si">{</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;StudyDescription&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> 
+            <span class="sa">f</span><span class="s2">&quot;series_[</span><span class="si">{</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;SeriesNumber&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]_</span><span class="si">{</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;SeriesDescription&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">rel_dir</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rel_dir</span><span class="p">,</span> <span class="n">dbdataset</span><span class="o">.</span><span class="n">new_uid</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;.dcm&#39;</span><span class="p">)</span>
+        <span class="n">dbdataset</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">))</span>
+        <span class="c1"># Add an entry in the register</span>
+        <span class="n">register</span><span class="o">.</span><span class="n">add_instance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span></div>
+
+
+
+
+    <span class="c1"># def _split_series(self):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Split series with multiple SOP Classes.</span>
+
+    <span class="c1">#     If a series contain instances from different SOP Classes, </span>
+    <span class="c1">#     these are separated out into multiple series with identical SOP Classes.</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     # For each series, check if there are multiple</span>
+    <span class="c1">#     # SOP Classes in the series and split them if yes.</span>
+    <span class="c1">#     for series in self.series():</span>
+    <span class="c1">#         series_index = register.index(self.register, series)</span>
+    <span class="c1">#         df_series = self.register.loc[series_index]</span>
+    <span class="c1">#         sop_classes = df_series.SOPClassUID.unique()</span>
+    <span class="c1">#         if len(sop_classes) &gt; 1:</span>
+    <span class="c1">#             # For each sop_class, create a new series and move all</span>
+    <span class="c1">#             # instances of that sop_class to the new series</span>
+    <span class="c1">#             desc = series[-1] if isinstance(series, str) else series[0]</span>
+    <span class="c1">#             for i, sop_class in tqdm(enumerate(sop_classes[1:]), desc=&#39;Splitting series with multiple SOP Classes.&#39;):</span>
+    <span class="c1">#                 df_sop_class = df_series[df_series.SOPClassUID == sop_class]</span>
+    <span class="c1">#                 relpaths = df_sop_class.index.tolist()</span>
+    <span class="c1">#                 sop_class_files = [os.path.join(self.path, p) for p in relpaths]</span>
+    <span class="c1">#                 sop_class_series = series[:-1] + [desc + f&#39; [{i+1}]&#39;]</span>
+    <span class="c1">#                 self._files_to_series(sop_class_files, sop_class_series)</span>
+    <span class="c1">#                 # Delete original files permanently</span>
+    <span class="c1">#                 self.register.drop(relpaths)</span>
+    <span class="c1">#                 for f in sop_class_files:</span>
+    <span class="c1">#                     os.remove(f)</span>
+    <span class="c1">#     self.register.drop(&#39;SOPClassUID&#39;, axis=1, inplace=True)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">infer_slice_spacing</span><span class="p">(</span><span class="n">vols</span><span class="p">):</span>
+    <span class="c1"># In case spacing between slices is not (correctly) encoded in </span>
+    <span class="c1"># DICOM it can be inferred from the slice locations.</span>
+
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">vols</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">vols</span> <span class="o">=</span> <span class="n">vols</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">slice_spacing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">vols</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vols</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+
+        <span class="c1"># For single slice volumes there is nothing to do</span>
+        <span class="k">if</span> <span class="n">vols</span><span class="p">[:,</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Get a normal slice vector from the first volume.</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">vols</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mat</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="c1"># Get slice locations by projection on the normal.</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vols</span><span class="p">[:,</span><span class="n">d</span><span class="p">]]</span>
+        <span class="n">slice_loc</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">normal</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">]</span>
+
+        <span class="c1"># Sort slice locations and take consecutive differences.</span>
+        <span class="n">slice_loc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">slice_loc</span><span class="p">)</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">slice_loc</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">slice_loc</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Round to micrometer and check if unique</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">slice_spacing_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">distances</span><span class="p">)</span>
+
+        <span class="c1"># Check if unique - otherwise this is not a volume</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">slice_spacing_d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot build a volume - spacings between slices are not unique.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">slice_spacing_d</span><span class="o">=</span> <span class="n">slice_spacing_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Set correct slice spacing in all volumes</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vols</span><span class="p">[:,</span><span class="n">d</span><span class="p">]:</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">affine</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">normal</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">slice_spacing_d</span><span class="p">)</span>
+
+        <span class="n">slice_spacing</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">slice_spacing_d</span>
+
+    <span class="c1"># Check slice_spacing is the same across dimensions</span>
+    <span class="n">slice_spacing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">slice_spacing</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">slice_spacing</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">&#39;Cannot build a volume - spacings between slices are not unique.&#39;</span>
+        <span class="p">)</span>    
+
+    <span class="k">return</span> <span class="n">vols</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+
+
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2022-2025, miblab.org.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
