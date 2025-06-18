@@ -54,14 +54,13 @@ def dismantle_affine_matrix(affine):
     # ImagePositionPatient_i = ImagePositionPatient + i * SpacingBetweenSlices * slice_cosine
     column_spacing = np.linalg.norm(affine[:3, 0])
     row_spacing = np.linalg.norm(affine[:3, 1])
-    slice_thickness = np.linalg.norm(affine[:3, 2])
+    slice_spacing = np.linalg.norm(affine[:3, 2])
     row_cosine = affine[:3, 0] / column_spacing
     column_cosine = affine[:3, 1] / row_spacing
-    slice_cosine = affine[:3, 2] / slice_thickness
+    slice_cosine = affine[:3, 2] / slice_spacing
     return {
         'PixelSpacing': [row_spacing, column_spacing], 
-#        'SpacingBetweenSlices': slice_thickness,  # Obsolete
-        'SliceThickness': slice_thickness, 
+        'SpacingBetweenSlices': slice_spacing,  
         'ImageOrientationPatient': row_cosine.tolist() + column_cosine.tolist(), 
         'ImagePositionPatient': affine[:3, 3].tolist(), # first slice for a volume
         'slice_cosine': slice_cosine.tolist()} 

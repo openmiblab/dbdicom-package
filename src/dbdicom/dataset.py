@@ -229,7 +229,8 @@ def write(ds, file, status=None):
     dir = os.path.dirname(file)
     if not os.path.exists(dir):
         os.makedirs(dir)
-    ds.save_as(file, write_like_original=False)
+    #ds.save_as(file, write_like_original=False) # deprecated
+    ds.save_as(file, enforce_file_format=True)
 
 
 def codify(source_file, save_file, **kwargs):
@@ -513,32 +514,24 @@ def set_lut(ds, RGB):
 
 
 
-def affine(ds, multislice=False):
-    if multislice:
-        return image.affine_matrix(
-            get_values(ds, 'ImageOrientationPatient'), 
-            get_values(ds, 'ImagePositionPatient'), 
-            get_values(ds, 'PixelSpacing'), 
-            get_values(ds, 'SpacingBetweenSlices'),
-        )
-    else:
-        return image.affine_matrix(
-            get_values(ds, 'ImageOrientationPatient'), 
-            get_values(ds, 'ImagePositionPatient'), 
-            get_values(ds, 'PixelSpacing'), 
-            get_values(ds, 'SliceThickness'),
-        )
+def affine(ds):
+    # Spacing Between Slices is not required so can be absent
+    slice_spacing = ds.get("SpacingBetweenSlices")
+    if slice_spacing is None:
+        slice_spacing = ds.get("SliceThickness")
+    return image.affine_matrix(
+        get_values(ds, 'ImageOrientationPatient'), 
+        get_values(ds, 'ImagePositionPatient'), 
+        get_values(ds, 'PixelSpacing'), 
+        slice_spacing, 
+    )
 
-
-def set_affine(ds, affine, multislice=False):
+def set_affine(ds, affine):
     if affine is None:
         raise ValueError('The affine cannot be set to an empty value')
     v = image.dismantle_affine_matrix(affine)
     set_values(ds, 'PixelSpacing', v['PixelSpacing'])
-    if multislice:
-        set_values(ds, 'SpacingBetweenSlices', v['SliceThickness'])
-    else:
-        set_values(ds, 'SliceThickness', v['SliceThickness'])
+    set_values(ds, 'SpacingBetweenSlices', v['SpacingBetweenSlices'])
     set_values(ds, 'ImageOrientationPatient', v['ImageOrientationPatient'])
     set_values(ds, 'ImagePositionPatient', v['ImagePositionPatient'])
     set_values(ds, 'SliceLocation', np.dot(v['ImagePositionPatient'], v['slice_cosine']))
@@ -602,10 +595,10 @@ def set_pixel_data(ds, array):
     ds.PixelData = array.tobytes()
 
 
-def volume(ds, multislice=False):
-    return vreg.volume(pixel_data(ds), affine(ds, multislice))
+def volume(ds):
+    return vreg.volume(pixel_data(ds), affine(ds))
 
-def set_volume(ds, volume:vreg.Volume3D, multislice=False):
+def set_volume(ds, volume:vreg.Volume3D):
     if volume is None:
         raise ValueError('The volume cannot be set to an empty value.')
     try:
@@ -621,7 +614,7 @@ def set_volume(ds, volume:vreg.Volume3D, multislice=False):
     if image.ndim != 2:
         raise ValueError("Can only write 2D images to a dataset.")
     set_pixel_data(ds, image)
-    set_affine(ds, volume.affine, multislice)
+    set_affine(ds, volume.affine)
     if volume.coords is not None:
         # All other dimensions should have size 1
         coords = volume.coords.reshape((volume.coords.shape[0], -1))
