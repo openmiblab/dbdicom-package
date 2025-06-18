@@ -1,0 +1,27 @@
+{
+  "title": "A python interface for reading and writing DICOM databases",
+  "upload_type": "software",
+  "description": "See the documentation on https://openmiblab.github.io/dbdicom",
+  "creators": [
+    {
+      "name": "Sourbron, Steven",
+      "affiliation": "University of Sheffield"
+    }
+  ],
+  "keywords": ["data", "metadata", "dmr format", "API"],
+  "license": "Apache-2.0",
+  "version": "0.3.3",
+  "publication_date": "2025-06-18",
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://openmiblab.github.io/dbdicom"
+    }
+  ],
+  "url": "https://miblab.org",
+  "communities": [
+    {
+      "identifier": "miblab"
+    }
+  ]
+}
