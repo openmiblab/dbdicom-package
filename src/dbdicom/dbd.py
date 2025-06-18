@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import json
+from typing import Union
 
 from tqdm import tqdm
 import numpy as np
@@ -143,6 +144,11 @@ class DataBaseDicom():
             for patient in self.patients():
                 studies += self.studies(patient, name, contains, isin)
             return studies
+        elif len(entity)==1:
+            studies = []
+            for patient in self.patients():
+                studies += self.studies(patient, name, contains, isin)
+            return studies
         else:
             return register.studies(self.register, entity, name, contains, isin)
     
@@ -172,6 +178,11 @@ class DataBaseDicom():
             for study in self.studies(entity):
                 series += self.series(study, name, contains, isin)
             return series
+        elif len(entity)==1:
+            series = []
+            for study in self.studies(entity):
+                series += self.series(study, name, contains, isin)
+            return series            
         elif len(entity)==2:
             series = []
             for study in self.studies(entity):
@@ -181,20 +192,20 @@ class DataBaseDicom():
             return register.series(self.register, entity, name, contains, isin)
 
 
-    def volume(self, series:list, dims:list=None, multislice=False) -> vreg.Volume3D:
+    def volume(self, series:list, dims:list=None) -> vreg.Volume3D:
         """Read a vreg.Volume3D from a DICOM series
 
         Args:
             series (list): DICOM series to read
             dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
-            multislice (bool, optional): Whether the data are to be read 
-                as multislice or not. In multislice data the voxel size 
-                is taken from the slice gap rather thsan the slice thickness. Defaults to False.
 
         Returns:
             vreg.Volume3D: vole read from the series.
         """
-
+        if isinstance(series, str): # path to folder
+            return [self.volume(s, dims) for s in self.series(series)]
+        if len(series) < 4: # folder, patient or study
+            return [self.volume(s, dims) for s in self.series(series)]
         if dims is None:
             dims = []
         elif isinstance(dims, str):
@@ -211,7 +222,7 @@ class DataBaseDicom():
         for f in tqdm(files, desc='Reading volume..'):
             ds = dbdataset.read_dataset(f)  
             values.append(dbdataset.get_values(ds, dims))
-            volumes.append(dbdataset.volume(ds, multislice))
+            volumes.append(dbdataset.volume(ds))
 
         # Format as mesh
         coords = np.stack(values, axis=-1)
@@ -229,9 +240,21 @@ class DataBaseDicom():
                     "firstslice=True, the coordinates of the lowest "
                     "slice will be assigned to the whole volume."     
                 )
+            
+        # Infer spacing between slices from slice locations
+        # Technically only necessary if SpacingBetweenSlices not set or incorrect
+        vols = infer_slice_spacing(vols)
 
         # Join 2D volumes into 3D volumes
-        vol = vreg.join(vols)
+        try:
+            vol = vreg.join(vols)
+        except ValueError:
+            # some vendors define the slice vector as -cross product 
+            # of row and column vector. Check if that solves the issue.
+            for v in vols.reshape(-1):
+                v.affine[:3,2] = -v.affine[:3,2]
+                # Then try again
+            vol = vreg.join(vols)
         if vol.ndim > 3:
             vol.set_coords(c0)
             vol.set_dims(dims[1:])
@@ -239,19 +262,18 @@ class DataBaseDicom():
 
     
     def write_volume(
-            self, vol:vreg.Volume3D, series:list, 
-            ref:list=None, multislice=False,
+            self, vol:Union[vreg.Volume3D, tuple], series:list, 
+            ref:list=None, 
         ):
         """Write a vreg.Volume3D to a DICOM series
 
         Args:
             vol (vreg.Volume3D): Volume to write to the series.
             series (list): DICOM series to read
-            dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
-            multislice (bool, optional): Whether the data are to be read 
-                as multislice or not. In multislice data the voxel size 
-                is taken from the slice gap rather than the slice thickness. Defaults to False.
+            ref (list): Reference series
         """
+        if isinstance(vol, tuple):
+            vol = vreg.volume(vol[0], vol[1])
         if ref is None:
             ds = dbdataset.new_dataset('MRImage')
             #ds = dbdataset.new_dataset('ParametricMap')
@@ -270,21 +292,21 @@ class DataBaseDicom():
         if vol.ndim==3:
             slices = vol.split()
             for i, sl in tqdm(enumerate(slices), desc='Writing volume..'):
-                dbdataset.set_volume(ds, sl, multislice)
+                dbdataset.set_volume(ds, sl)
                 self._write_dataset(ds, attr, n + 1 + i)
         else:
             i=0
             vols = vol.separate().reshape(-1)
             for vt in tqdm(vols, desc='Writing volume..'):
                 for sl in vt.split():
-                    dbdataset.set_volume(ds, sl, multislice)
+                    dbdataset.set_volume(ds, sl)
                     dbdataset.set_value(ds, sl.dims, sl.coords[:,...])
                     self._write_dataset(ds, attr, n + 1 + i)
                     i+=1
         return self
 
 
-    def to_nifti(self, series:list, file:str, dims=None, multislice=False):
+    def to_nifti(self, series:list, file:str, dims=None):
         """Save a DICOM series in nifti format.
 
         Args:
@@ -292,34 +314,31 @@ class DataBaseDicom():
             file (str): file path of the nifti file.
             dims (list, optional): Non-spatial dimensions of the volume. 
                 Defaults to None.
-            multislice (bool, optional): Whether the data are to be read 
-                as multislice or not. In multislice data the voxel size 
-                is taken from the slice gap rather thaan the slice thickness. Defaults to False.
         """
-        vol = self.volume(series, dims, multislice)
+        vol = self.volume(series, dims)
         vreg.write_nifti(vol, file)
         return self
 
-    def from_nifti(self, file:str, series:list, ref:list=None, multislice=False):
+    def from_nifti(self, file:str, series:list, ref:list=None):
         """Create a DICOM series from a nifti file.
 
         Args:
             file (str): file path of the nifti file.
             series (list): DICOM series to create
             ref (list): DICOM series to use as template.
-            multislice (bool, optional): Whether the data are to be written
-                as multislice or not. In multislice data the voxel size 
-                is written in the slice gap rather thaan the slice thickness. Defaults to False.
         """
         vol = vreg.read_nifti(file)
-        self.write_volume(vol, series, ref, multislice)
+        self.write_volume(vol, series, ref)
         return self
     
     def pixel_data(self, series:list, dims:list=None, coords=False, include=None) -> np.ndarray:
         """Read the pixel data from a DICOM series
 
         Args:
-            series (list): DICOM series to read
+            series (list or str): DICOM series to read. This can also 
+                be a path to a folder containing DICOM files, or a 
+                patient or study to read all series in that patient or 
+                study. In those cases a list is returned.
             dims (list, optional): Dimensions of the array.
             coords (bool): If set to Trye, the coordinates of the 
                 arrays are returned alongside the pixel data
@@ -332,8 +351,12 @@ class DataBaseDicom():
                 coords is set these are returned too as an array with 
                 coordinates of the slices according to dims. If include 
                 is provide the values are returned as a dictionary in the last 
-                return value.
+                return value. 
         """
+        if isinstance(series, str): # path to folder
+            return [self.pixel_data(s, dims, coords, include) for s in self.series(series)]
+        if len(series) < 4: # folder, patient or study
+            return [self.pixel_data(s, dims, coords, include) for s in self.series(series)]
         if coords:
             if dims is None:
                 raise ValueError(
@@ -529,13 +552,19 @@ class DataBaseDicom():
             ds = dbdataset.read_dataset(f)
             self._write_dataset(ds, attr, n + 1 + i)
 
-
+    def _max_study_id(self, patient_id):
+        for pt in self.register:
+            if pt['PatientID'] == patient_id:
+                n = [int(st['StudyID']) for st in pt['studies']]
+                return int(np.amax(n))
+        return 0
+    
     def _max_series_number(self, study_uid):
         for pt in self.register:
             for st in pt['studies']:
                 if st['StudyInstanceUID'] == study_uid:
-                    n = [sr['SeriesNumber'] for sr in st['studies']]
-                    return np.amax(n)
+                    n = [sr['SeriesNumber'] for sr in st['series']]
+                    return int(np.amax(n))
         return 0
 
     def _max_instance_number(self, series_uid):
@@ -544,7 +573,7 @@ class DataBaseDicom():
                 for sr in st['series']:
                     if sr['SeriesInstanceUID'] == series_uid:
                         n = list(sr['instances'].keys())
-                        return np.amax([int(i) for i in n])
+                        return int(np.amax([int(i) for i in n]))
         return 0
 
     def _attributes(self, entity):
@@ -566,7 +595,8 @@ class DataBaseDicom():
         except:
             # If the patient does not exist, generate values
             attr = ['PatientID', 'PatientName']
-            patient_id = dbdataset.new_uid()
+            #patient_id = dbdataset.new_uid()
+            patient_id = patient[-1] if isinstance(patient[-1], str) else f"{patient[-1][0]}_{patient[-1][1]}"
             patient_name = patient[-1] if isinstance(patient[-1], str) else patient[-1][0]
             vals = [patient_id, patient_name]
         return {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
@@ -581,12 +611,18 @@ class DataBaseDicom():
             ds = dbdataset.read_dataset(files[0])
             vals = dbdataset.get_values(ds, attr)
         except:
-            # If the study does not exist, generate values
-            attr = ['StudyInstanceUID', 'StudyDescription', 'StudyDate']
-            study_id = dbdataset.new_uid()
+            # If the study does not exist or is empty, generate values
+            try:
+                patient_id = register.uid(self.register, study[:-1])
+            except:
+                study_id = 1
+            else:
+                study_id = 1 + self._max_study_id(patient_id)
+            attr = ['StudyInstanceUID', 'StudyDescription', 'StudyDate', 'StudyID']
+            study_uid = dbdataset.new_uid()
             study_desc = study[-1] if isinstance(study[-1], str) else study[-1][0]
             study_date = datetime.today().strftime('%Y%m%d')
-            vals = [study_id, study_desc, study_date]
+            vals = [study_uid, study_desc, study_date, str(study_id)]
         return patient_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
 
@@ -607,9 +643,9 @@ class DataBaseDicom():
             else:
                 series_number = 1 + self._max_series_number(study_uid)
             attr = ['SeriesInstanceUID', 'SeriesDescription', 'SeriesNumber']
-            series_id = dbdataset.new_uid()
+            series_uid = dbdataset.new_uid()
             series_desc = series[-1] if isinstance(series[-1], str) else series[-1][0]
-            vals = [series_id, series_desc, series_number]
+            vals = [series_uid, series_desc, int(series_number)]
         return study_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
         
@@ -619,7 +655,13 @@ class DataBaseDicom():
         attr['InstanceNumber'] = str(instance_nr)
         dbdataset.set_values(ds, list(attr.keys()), list(attr.values()))
         # Save results in a new file
-        rel_path = os.path.join('dbdicom', dbdataset.new_uid() + '.dcm') 
+        rel_dir = os.path.join(
+            f"patient_{attr['PatientID']}", 
+            f"study_[{attr['StudyID']}]_{attr['StudyDescription']}", 
+            f"series_[{attr['SeriesNumber']}]_{attr['SeriesDescription']}",
+        )
+        os.makedirs(os.path.join(self.path, rel_dir), exist_ok=True)
+        rel_path = os.path.join(rel_dir, dbdataset.new_uid() + '.dcm')
         dbdataset.write(ds, os.path.join(self.path, rel_path))
         # Add an entry in the register
         register.add_instance(self.register, attr, rel_path)
@@ -655,6 +697,59 @@ class DataBaseDicom():
     #                     os.remove(f)
     #     self.register.drop('SOPClassUID', axis=1, inplace=True)
 
+
+def infer_slice_spacing(vols):
+    # In case spacing between slices is not (correctly) encoded in 
+    # DICOM it can be inferred from the slice locations.
+
+    shape = vols.shape
+    vols = vols.reshape((shape[0], -1))
+    slice_spacing = np.zeros(vols.shape[-1])
+
+    for d in range(vols.shape[-1]):
+
+        # For single slice volumes there is nothing to do
+        if vols[:,d].shape[0]==1:
+            continue
+
+        # Get a normal slice vector from the first volume.
+        mat = vols[0,d].affine[:3,:3]
+        normal = mat[:,2]/np.linalg.norm(mat[:,2])
+
+        # Get slice locations by projection on the normal.
+        pos = [v.affine[:3,3] for v in vols[:,d]]
+        slice_loc = [np.dot(p, normal) for p in pos]
+
+        # Sort slice locations and take consecutive differences.
+        slice_loc = np.sort(slice_loc)
+        distances = slice_loc[1:] - slice_loc[:-1]
+
+        # Round to micrometer and check if unique
+        distances = np.around(distances, 3)
+        slice_spacing_d = np.unique(distances)
+
+        # Check if unique - otherwise this is not a volume
+        if len(slice_spacing_d) > 1:
+            raise ValueError(
+                'Cannot build a volume - spacings between slices are not unique.'
+            )
+        else:
+            slice_spacing_d= slice_spacing_d[0]
+        
+        # Set correct slice spacing in all volumes
+        for v in vols[:,d]:
+            v.affine[:3,2] = normal * abs(slice_spacing_d)
+
+        slice_spacing[d] = slice_spacing_d
+
+    # Check slice_spacing is the same across dimensions
+    slice_spacing = np.unique(slice_spacing)
+    if len(slice_spacing) > 1:
+        raise ValueError(
+            'Cannot build a volume - spacings between slices are not unique.'
+        )    
+
+    return vols.reshape(shape)
 
 
 

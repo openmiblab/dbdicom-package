@@ -23,33 +23,54 @@ def pixel_data(ds):
     if [0x2005, 0x100E] in ds: # 'Philips Rescale Slope'
         slope = ds[(0x2005, 0x100E)].value
         intercept = ds[(0x2005, 0x100D)].value
-        array -= intercept
-        array /= slope
+        if (intercept == 0) and (slope == 1): 
+            array = array.astype(np.int16)
+        else:
+            array = array.astype(np.float32)
+            array -= intercept
+            array /= slope
     else:
         slope = float(getattr(ds, 'RescaleSlope', 1)) 
         intercept = float(getattr(ds, 'RescaleIntercept', 0)) 
-        array *= slope
-        array += intercept
+        if (intercept == 0) and (slope == 1): 
+            array = array.astype(np.int16)
+        else:
+            array = array.astype(np.float32)
+            array *= slope
+            array += intercept
     return np.transpose(array)
 
 
 def set_pixel_data(ds, array):
 
+    # Delete 'Philips Rescale Slope'
     if (0x2005, 0x100E) in ds: 
-        del ds[0x2005, 0x100E]  # Delete 'Philips Rescale Slope'
+        del ds[0x2005, 0x100E] 
     if (0x2005, 0x100D) in ds: 
         del ds[0x2005, 0x100D]
 
-    # clipping may slow down a lot
-    array = image.clip(array.astype(np.float32))
-    array, slope, intercept = image.scale_to_range(array, ds.BitsAllocated)
-    array = np.transpose(array)
+    ds.BitsAllocated = 16
+    ds.BitsStored = 16
+    ds.HighBit = 15
 
-    ds.PixelRepresentation = 0
-    ds.RescaleSlope = 1 / slope
-    ds.RescaleIntercept = - intercept / slope
-#        ds.WindowCenter = (maximum + minimum) / 2
-#        ds.WindowWidth = maximum - minimum
+    # clipping may slow down a lot
+    #array = image.clip(array.astype(np.float32))
+    array = image.clip(array) # remove nan and infs
+    if array.dtype==np.int16:
+        ds.PixelRepresentation = 1
+        ds.RescaleSlope = 1
+        ds.RescaleIntercept = 0
+    elif array.dtype==np.uint16:
+        ds.PixelRepresentation = 0
+        ds.RescaleSlope = 1
+        ds.RescaleIntercept = 0
+    else:
+        array, slope, intercept = image.scale_to_range(array, ds.BitsStored)
+        ds.PixelRepresentation = 0
+        ds.RescaleSlope = 1 / slope
+        ds.RescaleIntercept = - intercept / slope
+
+    array = np.transpose(array)
     ds.Rows = array.shape[0]
     ds.Columns = array.shape[1]
     ds.PixelData = array.tobytes()

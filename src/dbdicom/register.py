@@ -21,6 +21,7 @@ def add_instance(dbtree:list, instance, rel_path):
         st = {
             'StudyDescription': instance['StudyDescription'],
             'StudyDate': instance['StudyDate'],
+            'StudyID': instance['StudyID'],
             'StudyInstanceUID': instance['StudyInstanceUID'],
             'series': [],
         }
@@ -186,7 +187,7 @@ def _patient_uid(dbtree, patient):
                 f"Please specify the index in the call to patient_uid(). "
                 f"For instance ({patient}, {len(patients)-1})'. "
             )
-    raise ValueError(f"Patient {patient} not found in database.")
+    
     
 
 def _study_uid(dbtree, study):
