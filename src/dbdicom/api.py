@@ -88,14 +88,14 @@ def patients(path, name:str=None, contains:str=None, isin:list=None)->list:
     return p
 
 
-def studies(entity:str | list, name:str=None, contains:str=None, isin:list=None)->list:
+def studies(entity:str | list, desc:str=None, contains:str=None, isin:list=None)->list:
     """Return a list of studies in the DICOM folder.
 
     Args:
         entity (str or list): path to a DICOM folder (to search in 
             the whole folder), or a two-element list identifying a 
             patient (to search studies of a given patient).
-        name (str, optional): value of StudyDescription, to search for 
+        desc (str, optional): value of StudyDescription, to search for 
             studies with a given description. Defaults to None.
         contains (str, optional): substring of StudyDescription, to 
             search for studies based on part of their description. 
@@ -108,12 +108,12 @@ def studies(entity:str | list, name:str=None, contains:str=None, isin:list=None)
     """
     if isinstance(entity, str): # path = folder
         dbd = open(entity)
-        s = dbd.studies(entity, name, contains, isin)
+        s = dbd.studies(entity, desc, contains, isin)
         dbd.close()
         return s
     elif len(entity)==2: # path = patient
         dbd = open(entity[0])
-        s = dbd.studies(entity, name, contains, isin)
+        s = dbd.studies(entity, desc, contains, isin)
         dbd.close()
         return s
     else:
@@ -122,7 +122,7 @@ def studies(entity:str | list, name:str=None, contains:str=None, isin:list=None)
             "with a folder and a patient name."
         )
 
-def series(entity:str | list, name:str=None, contains:str=None, isin:list=None)->list:
+def series(entity:str | list, desc:str=None, contains:str=None, isin:list=None)->list:
     """Return a list of series in the DICOM folder.
 
     Args:
@@ -130,7 +130,7 @@ def series(entity:str | list, name:str=None, contains:str=None, isin:list=None)-
             the whole folder), or a list identifying a 
             patient or a study (to search series of a given patient 
             or study).
-        name (str, optional): value of SeriesDescription, to search for 
+        desc (str, optional): value of SeriesDescription, to search for 
             series with a given description. Defaults to None.
         contains (str, optional): substring of SeriesDescription, to 
             search for series based on part of their description. 
@@ -143,12 +143,12 @@ def series(entity:str | list, name:str=None, contains:str=None, isin:list=None)-
     """
     if isinstance(entity, str): # path = folder
         dbd = open(entity)
-        s = dbd.series(entity, name, contains, isin)
+        s = dbd.series(entity, desc, contains, isin)
         dbd.close()
         return s
     elif len(entity) in [2,3]:
         dbd = open(entity[0])
-        s = dbd.series(entity, name, contains, isin)
+        s = dbd.series(entity, desc, contains, isin)
         dbd.close()
         return s
     else:
@@ -190,21 +190,38 @@ def move(from_entity:list, to_entity:list):
     dbd.delete(from_entity)
     dbd.close()
 
+def split_series(series:list, attr:Union[str, tuple])->dict:
+    """
+    Split a series into multiple series
+    
+    Args:
+        series (list): series to split.
+        attr (str or tuple): dicom attribute to split the series by.  
+    Returns:
+        dict: dictionary with keys the unique values found (ascending) 
+        and as values the series corresponding to that value.     
+    """
+    dbd = open(series[0])
+    split_series = dbd.split_series(series, attr)
+    dbd.close()
+    return split_series
 
-def volume(series:list, dims:list=None) -> vreg.Volume3D:
-    """Read a vreg.Volume3D from a DICOM series
+
+def volume(entity:Union[list, str], dims:list=None) -> Union[vreg.Volume3D, list]:
+    """Read volume or volumes.
 
     Args:
-        series (list): DICOM series to read
+        entity (list, str): DICOM entity to read
         dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
 
     Returns:
-        vreg.Volume3D: vole read from the series.
+        vreg.Volume3D | list: If the entity is a series this returns 
+        a volume, else a list of volumes.
     """
-    if isinstance(series, str):
-        series = [series]
-    dbd = open(series[0])
-    vol = dbd.volume(series, dims)
+    if isinstance(entity, str):
+        entity = [entity]
+    dbd = open(entity[0])
+    vol = dbd.volume(entity, dims)
     dbd.close()
     return vol
 
@@ -281,11 +298,12 @@ def unique(pars:list, entity:list) -> dict:
     """Return a list of unique values for a DICOM entity
 
     Args:
-        pars (list): attributes to return.
+        pars (list, str/tuple): attribute or attributes to return.
         entity (list): DICOM entity to search (Patient, Study or Series)
 
     Returns:
-        dict: dictionary with unique values for each attribute.
+        dict: if a pars is a list, this returns a dictionary with 
+        unique values for each attribute. If pars is a scalar this returnes a list of values
     """
     dbd = open(entity[0])
     u = dbd.unique(pars, entity)

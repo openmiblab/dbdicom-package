@@ -5,12 +5,10 @@ from typing import Union
 
 from tqdm import tqdm
 import numpy as np
-import pandas as pd
 import vreg
 from pydicom.dataset import Dataset
 
 import dbdicom.utils.arrays
-
 import dbdicom.dataset as dbdataset
 import dbdicom.database as dbdatabase
 import dbdicom.register as register
@@ -36,8 +34,13 @@ class DataBaseDicom():
             try:
                 with open(file, 'r') as f:
                     self.register = json.load(f)
+                # remove the json file after reading it. If the database
+                # is not properly closed this will prevent that changes
+                # have been made which are not reflected in the json 
+                # file on disk
+                os.remove(file)
             except:
-                # If the file is corrupted, delete it and load again
+                # If the file can't be read, delete it and load again
                 os.remove(file)
                 self.read()
         else:
@@ -49,7 +52,7 @@ class DataBaseDicom():
         """
         self.register = dbdatabase.read(self.path)
         # For now ensure all series have just a single CIOD
-        # Leaving this out for now until the issue occurs again
+        # Leaving this out for now until the issue occurs again.
         # self._split_series()
         return self
 
@@ -63,12 +66,12 @@ class DataBaseDicom():
         """
         removed = register.index(self.register, entity)
         # delete datasets marked for removal
-        for index in removed.tolist():
+        for index in removed:
             file = os.path.join(self.path, index)
             if os.path.exists(file): 
                 os.remove(file)
         # and drop then from the register
-        self.register = register.drop(removed)
+        self.register = register.drop(self.register, removed)
         return self
     
 
@@ -77,7 +80,6 @@ class DataBaseDicom():
         
         This also saves changes in the header file to disk.
         """
-        # Save df as pkl
         file = self._register_file()
         with open(file, 'w') as f:
             json.dump(self.register, f, indent=4)
@@ -119,14 +121,14 @@ class DataBaseDicom():
         """
         return register.patients(self.register, self.path, name, contains, isin)
     
-    def studies(self, entity=None, name=None, contains=None, isin=None):
+    def studies(self, entity=None, desc=None, contains=None, isin=None):
         """Return a list of studies in the DICOM folder.
 
         Args:
             entity (str or list): path to a DICOM folder (to search in 
                 the whole folder), or a two-element list identifying a 
                 patient (to search studies of a given patient).
-            name (str, optional): value of StudyDescription, to search for 
+            desc (str, optional): value of StudyDescription, to search for 
                 studies with a given description. Defaults to None.
             contains (str, optional): substring of StudyDescription, to 
                 search for studies based on part of their description. 
@@ -142,17 +144,17 @@ class DataBaseDicom():
         if isinstance(entity, str):
             studies = []
             for patient in self.patients():
-                studies += self.studies(patient, name, contains, isin)
+                studies += self.studies(patient, desc, contains, isin)
             return studies
         elif len(entity)==1:
             studies = []
             for patient in self.patients():
-                studies += self.studies(patient, name, contains, isin)
+                studies += self.studies(patient, desc, contains, isin)
             return studies
         else:
-            return register.studies(self.register, entity, name, contains, isin)
+            return register.studies(self.register, entity, desc, contains, isin)
     
-    def series(self, entity=None, name=None, contains=None, isin=None):
+    def series(self, entity=None, desc=None, contains=None, isin=None):
         """Return a list of series in the DICOM folder.
 
         Args:
@@ -160,7 +162,7 @@ class DataBaseDicom():
                 the whole folder), or a list identifying a 
                 patient or a study (to search series of a given patient 
                 or study).
-            name (str, optional): value of SeriesDescription, to search for 
+            desc (str, optional): value of SeriesDescription, to search for 
                 series with a given description. Defaults to None.
             contains (str, optional): substring of SeriesDescription, to 
                 search for series based on part of their description. 
@@ -176,36 +178,37 @@ class DataBaseDicom():
         if isinstance(entity, str):
             series = []
             for study in self.studies(entity):
-                series += self.series(study, name, contains, isin)
+                series += self.series(study, desc, contains, isin)
             return series
         elif len(entity)==1:
             series = []
             for study in self.studies(entity):
-                series += self.series(study, name, contains, isin)
+                series += self.series(study, desc, contains, isin)
             return series            
         elif len(entity)==2:
             series = []
             for study in self.studies(entity):
-                series += self.series(study, name, contains, isin)
+                series += self.series(study, desc, contains, isin)
             return series
         else: # path = None (all series) or path = patient (all series in patient)
-            return register.series(self.register, entity, name, contains, isin)
+            return register.series(self.register, entity, desc, contains, isin)
 
 
-    def volume(self, series:list, dims:list=None) -> vreg.Volume3D:
-        """Read a vreg.Volume3D from a DICOM series
+    def volume(self, entity:Union[list, str], dims:list=None) -> Union[vreg.Volume3D, list]:
+        """Read volume or volumes.
 
         Args:
-            series (list): DICOM series to read
+            entity (list, str): DICOM entity to read
             dims (list, optional): Non-spatial dimensions of the volume. Defaults to None.
 
         Returns:
-            vreg.Volume3D: vole read from the series.
+            vreg.Volume3D | list: If the entity is a series this returns 
+            a volume, else a list of volumes.
         """
-        if isinstance(series, str): # path to folder
-            return [self.volume(s, dims) for s in self.series(series)]
-        if len(series) < 4: # folder, patient or study
-            return [self.volume(s, dims) for s in self.series(series)]
+        if isinstance(entity, str): # path to folder
+            return [self.volume(s, dims) for s in self.series(entity)]
+        if len(entity) < 4: # folder, patient or study
+            return [self.volume(s, dims) for s in self.series(entity)]
         if dims is None:
             dims = []
         elif isinstance(dims, str):
@@ -214,13 +217,13 @@ class DataBaseDicom():
             dims = list(dims)
         dims = ['SliceLocation'] + dims
 
-        files = register.files(self.register, series)
+        files = register.files(self.register, entity)
         
         # Read dicom files
         values = []
         volumes = []
         for f in tqdm(files, desc='Reading volume..'):
-            ds = dbdataset.read_dataset(f)  
+            ds = dbdataset.read_dataset(f)
             values.append(dbdataset.get_values(ds, dims))
             volumes.append(dbdataset.volume(ds))
 
@@ -283,10 +286,11 @@ class DataBaseDicom():
             else:
                 ref_mgr = DataBaseDicom(ref[0])
             files = register.files(ref_mgr.register, ref)
+            ref_mgr.close()
             ds = dbdataset.read_dataset(files[0]) 
 
         # Get the attributes of the destination series
-        attr = self._attributes(series)
+        attr = self._series_attributes(series)
         n = self._max_instance_number(attr['SeriesInstanceUID'])
 
         if vol.ndim==3:
@@ -422,12 +426,20 @@ class DataBaseDicom():
         """Return a list of unique values for a DICOM entity
 
         Args:
-            pars (list): attributes to return.
+            pars (list, str/tuple): attribute or attributes to return.
             entity (list): DICOM entity to search (Patient, Study or Series)
 
         Returns:
-            dict: dictionary with unique values for each attribute.
+            dict: if a pars is a list, this returns a dictionary with 
+            unique values for each attribute. If pars is a scalar 
+            this returnes a list of values.
         """
+        if not isinstance(pars, list):
+            single=True
+            pars = [pars]
+        else:
+            single=False
+
         v = self._values(pars, entity)
 
         # Return a list with unique values for each attribute
@@ -439,17 +451,16 @@ class DataBaseDicom():
             va = list(va)
             # Get unique values and sort
             va = [x for i, x in enumerate(va) if i==va.index(x)]
-            if len(va) == 0:
-                va = None
-            elif len(va) == 1:
-                va = va[0]
-            else:
-                try: 
-                    va.sort()
-                except:
-                    pass
+            try: 
+                va.sort()
+            except:
+                pass
             values.append(va)
-        return {p: values[i] for i, p in enumerate(pars)} 
+
+        if single:
+            return values[0]
+        else:
+            return {p: values[i] for i, p in enumerate(pars)} 
     
     def copy(self, from_entity, to_entity):
         """Copy a DICOM  entity (patient, study or series)
@@ -492,6 +503,40 @@ class DataBaseDicom():
         self.copy(from_entity, to_entity)
         self.delete(from_entity)
         return self
+    
+    def split_series(self, series:list, attr:Union[str, tuple]) -> dict:
+        """
+        Split a series into multiple series
+        
+        Args:
+            series (list): series to split.
+            attr (str or tuple): dicom attribute to split the series by. 
+        Returns:
+            dict: dictionary with keys the unique values found (ascending) 
+            and as values the series corresponding to that value.         
+        """
+
+        # Find all values of the attr and list files per value
+        all_files = register.files(self.register, series)
+        files = {}
+        for f in tqdm(all_files, desc=f'Reading {attr}'):
+            ds = dbdataset.read_dataset(f)
+            v = dbdataset.get_values(ds, attr)
+            if v in files:
+                files[v].append(f)
+            else:
+                files[v] = [f]
+
+        # Copy the files for each value (sorted) to new series
+        values = sorted(list(files.keys()))
+        split_series = {}
+        for v in tqdm(values, desc='Writing new series'):
+            series_desc = series[-1] if isinstance(series, str) else series[-1][0]
+            series_v = series[:3] + [f'{series_desc}_{attr}_{v}']
+            self._files_to_series(files[v], series_v)
+            split_series[v] = series_v
+        return split_series
+
 
     def _values(self, attributes:list, entity:list):
         # Create a np array v with values for each instance and attribute
@@ -509,27 +554,36 @@ class DataBaseDicom():
     def _copy_patient(self, from_patient, to_patient):
         from_patient_studies = register.studies(self.register, from_patient)
         for from_study in tqdm(from_patient_studies, desc=f'Copying patient {from_patient[1:]}'):
+            # Count the studies with the same description in the target patient
+            study_desc = from_study[-1][0]
             if to_patient[0]==from_patient[0]:
-                to_study = register.append(self.register, to_patient, from_study[-1])
+                cnt = len(self.studies(to_patient, desc=study_desc))
             else:
-                mgr = DataBaseDicom(to_study[0])
-                to_study = register.append(mgr.register, to_patient, from_study[-1])                
+                mgr = DataBaseDicom(to_patient[0])
+                cnt = len(mgr.studies(to_patient, desc=study_desc))
+                mgr.close()    
+            # Ensure the copied studies end up in a separate study with the same description
+            to_study = to_patient + [(study_desc, cnt)]         
             self._copy_study(from_study, to_study)
 
     def _copy_study(self, from_study, to_study):
         from_study_series = register.series(self.register, from_study)
         for from_series in tqdm(from_study_series, desc=f'Copying study {from_study[1:]}'):
+            # Count the series with the same description in the target study
+            series_desc = from_series[-1][0]
             if to_study[0]==from_study[0]:
-                to_series = register.append(self.register, to_study, from_series[-1])
+                cnt = len(self.series(to_study, desc=series_desc))
             else:
                 mgr = DataBaseDicom(to_study[0])
-                to_series = register.append(mgr.register, to_study, from_series[-1])
+                cnt = len(mgr.series(to_study, desc=series_desc))
+                mgr.close()
+            # Ensure the copied series end up in a separate series with the same description
+            to_series = to_study + [(series_desc, cnt)]
             self._copy_series(from_series, to_series)
 
     def _copy_series(self, from_series, to_series):
         # Get the files to be exported
         from_series_files = register.files(self.register, from_series)
-
         if to_series[0] == from_series[0]:
             # Copy in the same database
             self._files_to_series(from_series_files, to_series)
@@ -543,7 +597,7 @@ class DataBaseDicom():
     def _files_to_series(self, files, to_series):
 
         # Get the attributes of the destination series
-        attr = self._attributes(to_series)
+        attr = self._series_attributes(to_series)
         n = self._max_instance_number(attr['SeriesInstanceUID'])
         
         # Copy the files to the new series 
@@ -555,8 +609,17 @@ class DataBaseDicom():
     def _max_study_id(self, patient_id):
         for pt in self.register:
             if pt['PatientID'] == patient_id:
-                n = [int(st['StudyID']) for st in pt['studies']]
-                return int(np.amax(n))
+                # Find the largest integer StudyID
+                n = []
+                for st in pt['studies']:
+                    try:
+                        n.append(int(st['StudyID']))
+                    except:
+                        pass
+                if n == []:
+                    return 0
+                else:
+                    return int(np.amax(n))
         return 0
     
     def _max_series_number(self, study_uid):
@@ -576,13 +639,13 @@ class DataBaseDicom():
                         return int(np.amax([int(i) for i in n]))
         return 0
 
-    def _attributes(self, entity):
-        if len(entity)==4:
-            return self._series_attributes(entity)
-        if len(entity)==3:
-            return self._study_attributes(entity)
-        if len(entity)==2:
-            return self._patient_attributes(entity)       
+    # def _attributes(self, entity):
+    #     if len(entity)==4:
+    #         return self._series_attributes(entity)
+    #     if len(entity)==3:
+    #         return self._study_attributes(entity)
+    #     if len(entity)==2:
+    #         return self._patient_attributes(entity)       
 
 
     def _patient_attributes(self, patient):
@@ -594,11 +657,13 @@ class DataBaseDicom():
             vals = dbdataset.get_values(ds, attr)
         except:
             # If the patient does not exist, generate values
+            if patient in self.patients():
+                raise ValueError(
+                    f"Cannot create patient with id {patient[1]}."
+                    f"The ID is already taken. Please provide a unique ID."
+                )
             attr = ['PatientID', 'PatientName']
-            #patient_id = dbdataset.new_uid()
-            patient_id = patient[-1] if isinstance(patient[-1], str) else f"{patient[-1][0]}_{patient[-1][1]}"
-            patient_name = patient[-1] if isinstance(patient[-1], str) else patient[-1][0]
-            vals = [patient_id, patient_name]
+            vals = [patient[1], 'Anonymous']
         return {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
 
@@ -610,19 +675,19 @@ class DataBaseDicom():
             attr = const.STUDY_MODULE
             ds = dbdataset.read_dataset(files[0])
             vals = dbdataset.get_values(ds, attr)
+        except register.AmbiguousError as e:
+            raise register.AmbiguousError(e)
         except:
             # If the study does not exist or is empty, generate values
-            try:
-                patient_id = register.uid(self.register, study[:-1])
-            except:
+            if study[:-1] not in self.patients():
                 study_id = 1
             else:
-                study_id = 1 + self._max_study_id(patient_id)
-            attr = ['StudyInstanceUID', 'StudyDescription', 'StudyDate', 'StudyID']
+                study_id = 1 + self._max_study_id(study[-1])
+            attr = ['StudyInstanceUID', 'StudyDescription', 'StudyID']
             study_uid = dbdataset.new_uid()
             study_desc = study[-1] if isinstance(study[-1], str) else study[-1][0]
-            study_date = datetime.today().strftime('%Y%m%d')
-            vals = [study_uid, study_desc, study_date, str(study_id)]
+            #study_date = datetime.today().strftime('%Y%m%d')
+            vals = [study_uid, study_desc, str(study_id)]
         return patient_attr | {attr[i]:vals[i] for i in range(len(attr)) if vals[i] is not None}
 
 
@@ -634,10 +699,12 @@ class DataBaseDicom():
             attr = const.SERIES_MODULE
             ds = dbdataset.read_dataset(files[0])
             vals = dbdataset.get_values(ds, attr)
+        except register.AmbiguousError as e:
+            raise register.AmbiguousError(e)
         except:
             # If the series does not exist or is empty, generate values
             try:
-                study_uid = register.uid(self.register, series[:-1])
+                study_uid = register.study_uid(self.register, series[:-1])
             except:
                 series_number = 1
             else:
@@ -666,36 +733,6 @@ class DataBaseDicom():
         # Add an entry in the register
         register.add_instance(self.register, attr, rel_path)
 
-
-
-    # def _split_series(self):
-    #     """
-    #     Split series with multiple SOP Classes.
-
-    #     If a series contain instances from different SOP Classes, 
-    #     these are separated out into multiple series with identical SOP Classes.
-    #     """
-    #     # For each series, check if there are multiple
-    #     # SOP Classes in the series and split them if yes.
-    #     for series in self.series():
-    #         series_index = register.index(self.register, series)
-    #         df_series = self.register.loc[series_index]
-    #         sop_classes = df_series.SOPClassUID.unique()
-    #         if len(sop_classes) > 1:
-    #             # For each sop_class, create a new series and move all
-    #             # instances of that sop_class to the new series
-    #             desc = series[-1] if isinstance(series, str) else series[0]
-    #             for i, sop_class in tqdm(enumerate(sop_classes[1:]), desc='Splitting series with multiple SOP Classes.'):
-    #                 df_sop_class = df_series[df_series.SOPClassUID == sop_class]
-    #                 relpaths = df_sop_class.index.tolist()
-    #                 sop_class_files = [os.path.join(self.path, p) for p in relpaths]
-    #                 sop_class_series = series[:-1] + [desc + f' [{i+1}]']
-    #                 self._files_to_series(sop_class_files, sop_class_series)
-    #                 # Delete original files permanently
-    #                 self.register.drop(relpaths)
-    #                 for f in sop_class_files:
-    #                     os.remove(f)
-    #     self.register.drop('SOPClassUID', axis=1, inplace=True)
 
 
 def infer_slice_spacing(vols):
