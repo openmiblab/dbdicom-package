@@ -38,7 +38,7 @@ class DataBaseDicom():
                 # is not properly closed this will prevent that changes
                 # have been made which are not reflected in the json 
                 # file on disk
-                os.remove(file)
+                # os.remove(file)
             except:
                 # If the file can't be read, delete it and load again
                 os.remove(file)
