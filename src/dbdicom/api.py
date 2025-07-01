@@ -262,13 +262,65 @@ def from_nifti(file:str, series:list, ref:list=None):
     dbd.from_nifti(file, series, ref)
     dbd.close()
 
-def pixel_data(series:list, dims:list=None, include:list=None) -> tuple:
+
+def values(series:list, attr=None, dims:list=None, coords=False) -> Union[dict, tuple]:
+    """Read the values of some or all attributes from a DICOM series
+
+    Args:
+        series (list or str): DICOM series to read. This can also 
+            be a path to a folder containing DICOM files, or a 
+            patient or study to read all series in that patient or 
+            study. In those cases a list is returned.
+        attr (list, optional): list of DICOM attributes to read.
+        dims (list, optional): Dimensions to sort the attributes. 
+            If dims is not provided, values are sorted by 
+            InstanceNumber.
+        coords (bool): If set to True, the coordinates of the 
+            attributes are returned alongside the values
+
+    Returns:
+        dict or tuple: values as a dictionary in the last 
+            return value, where each value is a numpy array with 
+            the required dimensions. If coords is set to True, 
+            these are returned too.
+    """
+    if isinstance(series, str):
+        series = [series]
+    dbd = open(series[0])
+    array = dbd.values(series, attr, dims, coords)
+    dbd.close()
+    return array
+
+
+def files(entity:list) -> list:
+    """Read the files in a DICOM entity
+
+    Args:
+        entity (list or str): DICOM entity to read. This can 
+            be a path to a folder containing DICOM files, or a 
+            patient or study to read all series in that patient or 
+            study. 
+
+    Returns:
+        list: list of valid dicom files.
+    """
+    if isinstance(entity, str):
+        entity = [entity]
+    dbd = open(entity[0])
+    files = dbd.files(entity)
+    dbd.close()
+    return files
+
+
+def pixel_data(series:list, dims:list=None, coords=False, attr:list=None) -> tuple:
     """Read the pixel data from a DICOM series
 
     Args:
         series (list): DICOM series to read
         dims (list, optional): Dimensions of the array.
-        include (list, optional): list of DICOM attributes that are 
+        coords (bool): If set to True, the coordinates of the 
+            slices are returned alongside the pixel data.
+        attr (list, optional): list of DICOM attributes that are 
             read on the fly to avoid reading the data twice.
 
     Returns:
@@ -280,7 +332,7 @@ def pixel_data(series:list, dims:list=None, include:list=None) -> tuple:
     if isinstance(series, str):
         series = [series]
     dbd = open(series[0])
-    array = dbd.pixel_data(series, dims, include)
+    array = dbd.pixel_data(series, dims, coords, attr)
     dbd.close()
     return array
 

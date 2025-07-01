@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import vreg
 import pydicom
 from pydicom.dataset import FileMetaDataset, Dataset, FileDataset
 from pydicom.sequence import Sequence
@@ -53,18 +54,18 @@ def set_pixel_data(ds, array):
     ds.BitsStored = 16
     ds.HighBit = 15
 
-    # clipping may slow down a lot
-    #array = image.clip(array.astype(np.float32))
-    array = image.clip(array) # remove nan and infs
     if array.dtype==np.int16:
+        array = image.clip(array) # remove nan and infs
         ds.PixelRepresentation = 1
         ds.RescaleSlope = 1
         ds.RescaleIntercept = 0
     elif array.dtype==np.uint16:
+        array = image.clip(array) # remove nan and infs
         ds.PixelRepresentation = 0
         ds.RescaleSlope = 1
         ds.RescaleIntercept = 0
     else:
+        array = image.clip(array) # remove nan and infs
         array, slope, intercept = image.scale_to_range(array, ds.BitsStored)
         ds.PixelRepresentation = 0
         ds.RescaleSlope = 1 / slope
@@ -74,6 +75,7 @@ def set_pixel_data(ds, array):
     ds.Rows = array.shape[0]
     ds.Columns = array.shape[1]
     ds.PixelData = array.tobytes()
+
 
 
 def default(): # from the RIDER dataset

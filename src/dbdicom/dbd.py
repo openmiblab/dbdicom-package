@@ -39,7 +39,12 @@ class DataBaseDicom():
                 # have been made which are not reflected in the json 
                 # file on disk
                 # os.remove(file)
-            except:
+            except Exception as e:
+                # raise ValueError(
+                #     f'Cannot open {file}. Please close any programs that are '
+                #     f'using it and try again. Alternatively you can delete the file '
+                #     f'manually and try again.'
+                # )
                 # If the file can't be read, delete it and load again
                 os.remove(file)
                 self.read()
@@ -239,9 +244,7 @@ class DataBaseDicom():
             if not np.array_equal(coords[1:,k+1,...], c0):
                 raise ValueError(
                     "Cannot build a single volume. Not all slices "
-                    "have the same coordinates. \nIf you set " 
-                    "firstslice=True, the coordinates of the lowest "
-                    "slice will be assigned to the whole volume."     
+                    "have the same coordinates."     
                 )
             
         # Infer spacing between slices from slice locations
@@ -335,7 +338,7 @@ class DataBaseDicom():
         self.write_volume(vol, series, ref)
         return self
     
-    def pixel_data(self, series:list, dims:list=None, coords=False, include=None) -> np.ndarray:
+    def pixel_data(self, series:list, dims:list=None, coords=False, attr=None) -> np.ndarray:
         """Read the pixel data from a DICOM series
 
         Args:
@@ -344,9 +347,9 @@ class DataBaseDicom():
                 patient or study to read all series in that patient or 
                 study. In those cases a list is returned.
             dims (list, optional): Dimensions of the array.
-            coords (bool): If set to Trye, the coordinates of the 
+            coords (bool): If set to True, the coordinates of the 
                 arrays are returned alongside the pixel data
-            include (list, optional): list of DICOM attributes that are 
+            attr (list, optional): list of DICOM attributes that are 
                 read on the fly to avoid reading the data twice.
 
         Returns:
@@ -354,48 +357,42 @@ class DataBaseDicom():
                 at least 3 dimensions (x,y,z). If 
                 coords is set these are returned too as an array with 
                 coordinates of the slices according to dims. If include 
-                is provide the values are returned as a dictionary in the last 
+                is provided the values are returned as a dictionary in the last 
                 return value. 
         """
         if isinstance(series, str): # path to folder
-            return [self.pixel_data(s, dims, coords, include) for s in self.series(series)]
+            return [self.pixel_data(s, dims, coords, attr) for s in self.series(series)]
         if len(series) < 4: # folder, patient or study
-            return [self.pixel_data(s, dims, coords, include) for s in self.series(series)]
-        if coords:
-            if dims is None:
-                raise ValueError(
-                    "Coordinates can only be returned if dimensions are specified."
-                )
+            return [self.pixel_data(s, dims, coords, attr) for s in self.series(series)]
 
         if dims is None:
-            dims = []
+            dims = ['InstanceNumber']
         elif np.isscalar(dims):
             dims = [dims]
         else:
             dims = list(dims)
-        dims = ['SliceLocation'] + dims
 
         # Ensure return_vals is a list
-        if include is None:
+        if attr is None:
             params = []
-        elif np.isscalar(include):
-            params = [include]
+        elif np.isscalar(attr):
+            params = [attr]
         else:
-            params = list(include)
+            params = list(attr)
 
         files = register.files(self.register, series)
         
         # Read dicom files
         coords_array = []
         arrays = np.empty(len(files), dtype=dict)
-        if include is not None:
+        if attr is not None:
             values = np.empty(len(files), dtype=dict)
         for i, f in tqdm(enumerate(files), desc='Reading pixel data..'):
             ds = dbdataset.read_dataset(f)  
             coords_array.append(dbdataset.get_values(ds, dims))
             # save as dict so numpy does not stack as arrays
             arrays[i] = {'pixel_data': dbdataset.pixel_data(ds)}
-            if include is not None:
+            if attr is not None:
                 values[i] = {'values': dbdataset.get_values(ds, params)}
 
         # Format as mesh
@@ -406,20 +403,169 @@ class DataBaseDicom():
         arrays = np.stack([a['pixel_data'] for a in arrays.reshape(-1)], axis=-1)
         arrays = arrays.reshape(arrays.shape[:2] + coords_array.shape[1:])
 
-        if include is None:
+        if attr is None:
             if coords:
-                return arrays, coords_array[1:,...]
+                return arrays, coords_array
             else:
                 return arrays
+
+        # Return values as a dictionary
+        values = values[inds].reshape(-1)
+        values_dict = {}
+        for p in range(len(params)):
+            # Get the type from the first value
+            vp0 = values[0]['values'][p]
+            # Build an array of the right type
+            vp = np.zeros(values.size, dtype=type(vp0))
+            # Populate the array with values for parameter p
+            for i, v in enumerate(values):
+                vp[i] = v['values'][p]
+            # Reshape values for parameter p
+            vp = vp.reshape(coords_array.shape[1:])
+            # Eneter in the dictionary
+            values_dict[params[p]] = vp
+
+        # If only one, return as value
+        if len(params) == 1:
+            values_return = values_dict[attr[0]]
+        else:
+            values_return = values_dict
         
-        values = values[inds].reshape(coords_array.shape[1:])
-        values = np.stack([a['values'] for a in values.reshape(-1)], axis=-1)
-        values = values.reshape((len(params), ) + coords_array.shape[1:])
+        # problem if the values are a list. Needs an array with a prespeficied dtype
+        # values = values[inds].reshape(coords_array.shape[1:])
+        # values = np.stack([a['values'] for a in values.reshape(-1)], axis=-1) 
+        # values = values.reshape((len(params), ) + coords_array.shape[1:])
 
         if coords:
-            return arrays, coords_array[1:,...], values
+            return arrays, coords_array, values_return
         else:
-            return arrays, values
+            return arrays, values_return
+        
+
+    def values(self, series:list, attr=None, dims:list=None, coords=False) -> Union[dict, tuple]:
+        """Read the values of some or all attributes from a DICOM series
+
+        Args:
+            series (list or str): DICOM series to read. This can also 
+                be a path to a folder containing DICOM files, or a 
+                patient or study to read all series in that patient or 
+                study. In those cases a list is returned.
+            attr (list, optional): list of DICOM attributes to read.
+            dims (list, optional): Dimensions to sort the attributes. 
+                If dims is not provided, values are sorted by 
+                InstanceNumber.
+            coords (bool): If set to True, the coordinates of the 
+                attributes are returned alongside the values
+
+        Returns:
+            dict or tuple: values as a dictionary in the last 
+                return value, where each value is a numpy array with 
+                the required dimensions. If coords is set to True, 
+                these are returned too.
+        """
+        if isinstance(series, str): # path to folder
+            return [self.values(s, attr, dims, coords) for s in self.series(series)]
+        if len(series) < 4: # folder, patient or study
+            return [self.values(s, attr, dims, coords) for s in self.series(series)]
+
+        if dims is None:
+            dims = ['InstanceNumber']
+        elif np.isscalar(dims):
+            dims = [dims]
+        else:
+            dims = list(dims)
+
+        files = register.files(self.register, series)
+
+        # Ensure return_vals is a list
+        if attr is None:
+            # If attributes are not provided, read all 
+            # attributes from the first file
+            ds = dbdataset.read_dataset(files[0])
+            exclude = ['PixelData', 'FloatPixelData', 'DoubleFloatPixelData']
+            params = []
+            param_labels = []
+            for elem in ds:
+                if elem.keyword not in exclude:
+                    params.append(elem.tag)
+                    # For known tags use the keyword as label
+                    label = elem.tag if len(elem.keyword)==0 else elem.keyword
+                    param_labels.append(label)
+        elif np.isscalar(attr):
+            params = [attr]
+            param_labels = params[:]
+        else:
+            params = list(attr)
+            param_labels = params[:]
+
+        # Read dicom files
+        coords_array = []
+        values = np.empty(len(files), dtype=dict)
+        for i, f in tqdm(enumerate(files), desc='Reading values..'):
+            ds = dbdataset.read_dataset(f)  
+            coords_array.append(dbdataset.get_values(ds, dims))
+            # save as dict so numpy does not stack as arrays
+            values[i] = {'values': dbdataset.get_values(ds, params)}
+
+        # Format as mesh
+        coords_array = np.stack([v for v in coords_array], axis=-1)
+        coords_array, inds = dbdicom.utils.arrays.meshvals(coords_array)
+
+        # Sort values accordingly
+        values = values[inds].reshape(-1)
+
+        # Return values as a dictionary
+        values_dict = {}
+        for p in range(len(params)):
+            # Get the type from the first value
+            vp0 = values[0]['values'][p]
+            # Build an array of the right type
+            vp = np.zeros(values.size, dtype=type(vp0))
+            # Populate the arrate with values for parameter p
+            for i, v in enumerate(values):
+                vp[i] = v['values'][p]
+            # Reshape values for parameter p
+            vp = vp.reshape(coords_array.shape[1:])
+            # Eneter in the dictionary
+            values_dict[param_labels[p]] = vp
+
+        # If only one, return as value
+        if len(params) == 1:
+            values_return = values_dict[params[0]]
+        else:
+            values_return = values_dict
+
+        if coords:
+            return values_return, coords_array
+        else:
+            return values_return
+        
+
+    def files(self, entity:list) -> list:
+        """Read the files in a DICOM entity
+
+        Args:
+            entity (list or str): DICOM entity to read. This can 
+                be a path to a folder containing DICOM files, or a 
+                patient or study to read all series in that patient or 
+                study. 
+
+        Returns:
+            list: list of valid dicom files.
+        """
+        if isinstance(entity, str): # path to folder
+            files = []
+            for s in self.series(entity):
+                files += self.files(s)
+            return files
+        if len(entity) < 4: # folder, patient or study
+            files = []
+            for s in self.series(entity):
+                files += self.files(s)
+            return files
+
+        return register.files(self.register, entity)
+
     
     
     def unique(self, pars:list, entity:list) -> dict:
@@ -723,9 +869,9 @@ class DataBaseDicom():
         dbdataset.set_values(ds, list(attr.keys()), list(attr.values()))
         # Save results in a new file
         rel_dir = os.path.join(
-            f"patient_{attr['PatientID']}", 
-            f"study_[{attr['StudyID']}]_{attr['StudyDescription']}", 
-            f"series_[{attr['SeriesNumber']}]_{attr['SeriesDescription']}",
+            f"Patient__{attr['PatientID']}", 
+            f"Study__{attr['StudyID']}__{attr['StudyDescription']}", 
+            f"Series__{attr['SeriesNumber']}__{attr['SeriesDescription']}",
         )
         os.makedirs(os.path.join(self.path, rel_dir), exist_ok=True)
         rel_path = os.path.join(rel_dir, dbdataset.new_uid() + '.dcm')
@@ -761,8 +907,8 @@ def infer_slice_spacing(vols):
         slice_loc = np.sort(slice_loc)
         distances = slice_loc[1:] - slice_loc[:-1]
 
-        # Round to micrometer and check if unique
-        distances = np.around(distances, 3)
+        # Round to 10 micrometer and check if unique
+        distances = np.around(distances, 2)
         slice_spacing_d = np.unique(distances)
 
         # Check if unique - otherwise this is not a volume

@@ -574,25 +574,51 @@ def set_pixel_data(ds, array):
     if hasattr(mod, 'set_pixel_data'):
         return getattr(mod, 'set_pixel_data')(ds, array)
     
-    # if array.ndim >= 3: # remove spurious dimensions of 1
-    #     array = np.squeeze(array) 
+    ds.BitsAllocated = 16
+    ds.BitsStored = 16
+    ds.HighBit = 15
 
-    array = image.clip(array.astype(np.float32))
-    array, slope, intercept = image.scale_to_range(array, ds.BitsAllocated)
+    if array.dtype==np.int16:
+        array = image.clip(array) # remove nan and infs
+        ds.PixelRepresentation = 1
+        ds.RescaleSlope = 1
+        ds.RescaleIntercept = 0
+    elif array.dtype==np.uint16:
+        array = image.clip(array) # remove nan and infs
+        ds.PixelRepresentation = 0
+        ds.RescaleSlope = 1
+        ds.RescaleIntercept = 0
+    else:
+        array = image.clip(array) # remove nan and infs
+        array, slope, intercept = image.scale_to_range(array, ds.BitsStored)
+        ds.PixelRepresentation = 0
+        ds.RescaleSlope = 1 / slope
+        ds.RescaleIntercept = - intercept / slope
+
     array = np.transpose(array)
-
-    ds.PixelRepresentation = 0
-    #ds.SmallestImagePixelValue = int(0)
-    #ds.LargestImagePixelValue = int(2**ds.BitsAllocated - 1)
-    #ds.set_values('SmallestImagePixelValue', int(0))
-    #ds.set_values('LargestImagePixelValue', int(2**ds.BitsAllocated - 1))
-    ds.RescaleSlope = 1 / slope
-    ds.RescaleIntercept = - intercept / slope
-#        ds.WindowCenter = (maximum + minimum) / 2
-#        ds.WindowWidth = maximum - minimum
     ds.Rows = array.shape[0]
     ds.Columns = array.shape[1]
     ds.PixelData = array.tobytes()
+    
+#     # if array.ndim >= 3: # remove spurious dimensions of 1
+#     #     array = np.squeeze(array) 
+
+#     array = image.clip(array.astype(np.float32))
+#     array, slope, intercept = image.scale_to_range(array, ds.BitsAllocated)
+#     array = np.transpose(array)
+
+#     ds.PixelRepresentation = 0
+#     #ds.SmallestImagePixelValue = int(0)
+#     #ds.LargestImagePixelValue = int(2**ds.BitsAllocated - 1)
+#     #ds.set_values('SmallestImagePixelValue', int(0))
+#     #ds.set_values('LargestImagePixelValue', int(2**ds.BitsAllocated - 1))
+#     ds.RescaleSlope = 1 / slope
+#     ds.RescaleIntercept = - intercept / slope
+# #        ds.WindowCenter = (maximum + minimum) / 2
+# #        ds.WindowWidth = maximum - minimum
+#     ds.Rows = array.shape[0]
+#     ds.Columns = array.shape[1]
+#     ds.PixelData = array.tobytes()
 
 
 def volume(ds):

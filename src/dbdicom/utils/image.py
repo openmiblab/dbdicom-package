@@ -7,7 +7,7 @@ def affine_matrix(      # single slice function
     image_orientation,  # ImageOrientationPatient
     image_position,     # ImagePositionPatient
     pixel_spacing,      # PixelSpacing
-    slice_thickness):     # SliceThickness
+    slice_spacing):     # SpacingBetweenSlices
 
     row_spacing = pixel_spacing[0]
     column_spacing = pixel_spacing[1]
@@ -16,15 +16,10 @@ def affine_matrix(      # single slice function
     column_cosine = np.array(image_orientation[3:])
     slice_cosine = np.cross(row_cosine, column_cosine)
 
-    # This should not be addressed here
-    # # The coronal orientation has a left-handed reference frame
-    # if np.array_equal(np.around(image_orientation, 3), [1,0,0,0,0,-1]):
-    #     slice_cosine = -slice_cosine
-
     affine = np.identity(4, dtype=np.float32)
     affine[:3, 0] = row_cosine * column_spacing
     affine[:3, 1] = column_cosine * row_spacing
-    affine[:3, 2] = slice_cosine * slice_thickness
+    affine[:3, 2] = slice_cosine * slice_spacing
     affine[:3, 3] = image_position
     
     return affine 
@@ -91,8 +86,8 @@ def scale_to_range(array, bits_allocated, signed=False):
     else:
         slope = range / (maximum - minimum)
     intercept = -slope * minimum + minval
-    array *= slope
-    array += intercept
+    array = array * slope
+    array = array + intercept
 
     if bits_allocated == 8:
         if signed:

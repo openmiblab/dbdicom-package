@@ -29,8 +29,12 @@ def _mesh_shape(sorted_array):
 
     if np.prod(shape) != sorted_array.size:
         raise ValueError(
-            'These are not mesh coordinates.'
-            'Make sure to specify dimensions for a multidimensional series.'
+            'Improper dimensions for the series. This usually means '
+            'that there are multiple images at the same location, \n or that '
+            'there are no images at one or more locations. \n\n'
+            'Make sure to specify proper dimensions when reading a pixel array or volume. \n'
+            'If the default dimensions of pixel_array (InstanceNumber) generate this error, '
+            'the DICOM data may be corrupted.'
         ) 
     
     return shape
